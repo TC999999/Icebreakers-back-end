@@ -3,6 +3,10 @@ require("dotenv").config();
 // server port
 const PORT = +process.env.port || 3001;
 
+const BCRYPT_WORK_FACTOR = process.env.NODE_ENV === "test" ? 1 : 12;
+
+const SESSION_SECRET_KEY = process.env.SESSION_SECRET_KEY;
+
 // returns PostgreSQL url
 function getDBUri() {
   return process.env.NODE_ENV === "test"
@@ -10,4 +14,4 @@ function getDBUri() {
     : process.env.DATABASE_URL || "postgresql:///messages";
 }
 
-module.exports = { PORT, getDBUri };
+module.exports = { PORT, BCRYPT_WORK_FACTOR, SESSION_SECRET_KEY, getDBUri };

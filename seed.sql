@@ -23,7 +23,7 @@ CREATE TABLE users(
     favorite_color TEXT NOT NULL,
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
     flagged BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE direct_conversations(
@@ -31,7 +31,7 @@ CREATE TABLE direct_conversations(
     title TEXT NOT NULL,
     user_1_id INTEGER NOT NULL REFERENCES users,
     user_2_id INTEGER NOT NULL REFERENCES users,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE direct_conversations_messages(
@@ -39,7 +39,7 @@ CREATE TABLE direct_conversations_messages(
     content TEXT NOT NULL,
     user_id INTEGER NOT NULL REFERENCES users,
     direct_conversation_id  INTEGER NOT NULL REFERENCES direct_conversations,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE blocker_user_to_blocked_user(
@@ -52,21 +52,21 @@ CREATE TABLE group_conversations(
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
     host_id INTEGER NOT NULL REFERENCES users,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE group_conversations_messages(
     id SERIAL PRIMARY KEY,
     content TEXT NOT NULL,
     user_id INTEGER NOT NULL REFERENCES users,
-    group_conversation_id  INTEGER NOT NULL REFERENCES group_conversations,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL
+    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE user_to_group_conversations(
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users,
-    group_conversation_id  INTEGER NOT NULL REFERENCES group_conversations
+    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations
 );
 
 CREATE TABLE blocked_user_to_group_conversations(
@@ -81,5 +81,5 @@ CREATE TABLE reports(
     reporter_user_id INTEGER NOT NULL REFERENCES users,
     reported_user_id INTEGER NOT NULL REFERENCES users,
     checked BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
