@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const { UnauthorizedError } = require("../expressError");
 const { BCRYPT_WORK_FACTOR } = require("../config");
 const db = require("../db");
 
@@ -22,6 +23,37 @@ class Authorization {
     );
 
     return res.rows[0];
+  }
+
+  static async logIn({ username, password }) {
+    const res = await db.query(
+      `SELECT 
+            username, 
+            password, 
+            favorite_color AS "favoriteColor", 
+            is_admin AS "isAdmin", 
+            flagged AS "isFlagged" 
+        FROM 
+            users 
+        WHERE 
+            username=$1`,
+      [username]
+    );
+
+    const user = res.rows[0];
+
+    if (user) {
+      if (user.isFlagged) {
+        throw new UnauthorizedError("THIS ACCOUNT HAS BEEN FLAGGED!");
+      }
+      const isValid = await bcrypt.compare(password, user.password);
+      if (isValid === true) {
+        delete user.password;
+        return user;
+      }
+    }
+
+    throw new UnauthorizedError("Invalid username/password");
   }
 }
 

@@ -14,4 +14,9 @@ function getDBUri() {
     : process.env.DATABASE_URL || "postgresql:///messages";
 }
 
-module.exports = { PORT, BCRYPT_WORK_FACTOR, SESSION_SECRET_KEY, getDBUri };
+module.exports = {
+  PORT,
+  BCRYPT_WORK_FACTOR,
+  SESSION_SECRET_KEY,
+  getDBUri,
+};
