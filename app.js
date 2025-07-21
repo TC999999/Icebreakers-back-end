@@ -1,11 +1,21 @@
 const express = require("express");
+const cors = require("cors");
 const morgan = require("morgan");
 const session = require("express-session");
+const cookieParser = require("cookie-parser");
 const { NotFoundError } = require("./expressError");
 const authRoutes = require("./routes/auth");
 const { SESSION_SECRET_KEY } = require("./config");
 
 const app = express();
+
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -18,9 +28,9 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true,
       httpOnly: true,
       sameSite: "strict",
+      maxAge: 60 * 60 * 1000,
     },
   })
 );

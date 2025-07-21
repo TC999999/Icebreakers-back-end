@@ -16,13 +16,13 @@ DROP TABLE IF EXISTS reports;
 
 
 CREATE TABLE users(
-    id SERIAL PRIMARY KEY,
-    username TEXT NOT NULL UNIQUE,
+    username VARCHAR(30) NOT NULL UNIQUE PRIMARY KEY,
     password TEXT NOT NULL,
     email_address TEXT NOT NULL UNIQUE CHECK (position('@' IN email_address) > 1),
-    favorite_color TEXT NOT NULL,
+    biography VARCHAR(200),
+    favorite_color VARCHAR(7),
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
-    flagged BOOLEAN NOT NULL DEFAULT FALSE,
+    is_flagged BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -40,6 +40,12 @@ CREATE TABLE direct_conversations_messages(
     user_id INTEGER NOT NULL REFERENCES users,
     direct_conversation_id  INTEGER NOT NULL REFERENCES direct_conversations,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE direct_conversation_requests(
+    id SERIAL PRIMARY KEY,
+    requester_user_id INTEGER NOT NULL REFERENCES users,
+    requested_user_id INTEGER NOT NULL REFERENCES users,
 );
 
 CREATE TABLE blocker_user_to_blocked_user(
@@ -69,6 +75,12 @@ CREATE TABLE user_to_group_conversations(
     group_conversation_id INTEGER NOT NULL REFERENCES group_conversations
 );
 
+CREATE TABLE group_conversation_requests(
+    id SERIAL PRIMARY KEY,
+    requester_user_id INTEGER NOT NULL REFERENCES users,
+    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations
+);
+
 CREATE TABLE blocked_user_to_group_conversations(
     id SERIAL PRIMARY KEY,
     blocked_user_id INTEGER NOT NULL REFERENCES users,
@@ -82,4 +94,15 @@ CREATE TABLE reports(
     reported_user_id INTEGER NOT NULL REFERENCES users,
     checked BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE interests(
+    id SERIAL PRIMARY KEY,
+    topic TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE interests_to_users(
+    id SERIAL PRIMARY KEY,
+    topic_id INTEGER NOT NULL REFERENCES interests,
+    user_id INTEGER NOT NULL REFERENCES users
 );
