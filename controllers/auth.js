@@ -3,7 +3,7 @@ const Authorization = require("../models/auth");
 const registerUser = async (req, res, next) => {
   try {
     let { username, password, emailAddress, favoriteColor } = req.body;
-    let newUser = await Authorization.register({
+    let user = await Authorization.register({
       username,
       password,
       emailAddress,
@@ -11,12 +11,13 @@ const registerUser = async (req, res, next) => {
     });
 
     req.session.user = {
-      username: newUser.username,
-      isAdmin: newUser.isAdmin,
-      isFlagged: newUser.isFlagged,
+      username: user.username,
+      favoriteColor: user.favoriteColor,
+      isAdmin: user.isAdmin,
+      isFlagged: user.isFlagged,
     };
 
-    return res.status(200).send({ newUser });
+    return res.status(200).send({ user });
   } catch (err) {
     return next(err);
   }
