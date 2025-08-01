@@ -1,14 +1,25 @@
 const Authorization = require("../models/auth");
+const Interests = require("../models/interests");
 
 const registerUser = async (req, res, next) => {
   try {
-    let { username, password, emailAddress, favoriteColor } = req.body;
+    let {
+      username,
+      password,
+      emailAddress,
+      favoriteColor,
+      biography,
+      interests,
+    } = req.body;
     let user = await Authorization.register({
       username,
       password,
       emailAddress,
       favoriteColor,
+      biography,
     });
+
+    await Interests.addInterestsForUser(username, interests);
 
     req.session.user = {
       username: user.username,

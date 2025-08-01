@@ -29,69 +29,69 @@ CREATE TABLE users(
 CREATE TABLE direct_conversations(
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
-    user_1_id INTEGER NOT NULL REFERENCES users,
-    user_2_id INTEGER NOT NULL REFERENCES users,
+    user_1 VARCHAR(30) NOT NULL REFERENCES users,
+    user_2 VARCHAR(30) NOT NULL REFERENCES users,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE direct_conversations_messages(
     id SERIAL PRIMARY KEY,
     content TEXT NOT NULL,
-    user_id INTEGER NOT NULL REFERENCES users,
-    direct_conversation_id  INTEGER NOT NULL REFERENCES direct_conversations,
+    username VARCHAR(30) NOT NULL REFERENCES users,
+    direct_conversation_id INTEGER NOT NULL REFERENCES direct_conversations,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE direct_conversation_requests(
     id SERIAL PRIMARY KEY,
-    requester_user_id INTEGER NOT NULL REFERENCES users,
-    requested_user_id INTEGER NOT NULL REFERENCES users,
+    requester_user VARCHAR(30) NOT NULL REFERENCES users,
+    requested_user VARCHAR(30) NOT NULL REFERENCES users
 );
 
 CREATE TABLE blocker_user_to_blocked_user(
     id SERIAL PRIMARY KEY,
-    blocker_user_id INTEGER NOT NULL REFERENCES users,
-    blocked_user_id INTEGER NOT NULL REFERENCES users
+    blocker_user VARCHAR(30) NOT NULL REFERENCES users,
+    blocked_user VARCHAR(30) NOT NULL REFERENCES users
 );
 
 CREATE TABLE group_conversations(
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
-    host_id INTEGER NOT NULL REFERENCES users,
+    host VARCHAR(30) NOT NULL REFERENCES users,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE group_conversations_messages(
     id SERIAL PRIMARY KEY,
     content TEXT NOT NULL,
-    user_id INTEGER NOT NULL REFERENCES users,
+    username VARCHAR(30) NOT NULL REFERENCES users,
     group_conversation_id INTEGER NOT NULL REFERENCES group_conversations,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE user_to_group_conversations(
     id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users,
+    username VARCHAR(30) NOT NULL REFERENCES users,
     group_conversation_id INTEGER NOT NULL REFERENCES group_conversations
 );
 
 CREATE TABLE group_conversation_requests(
     id SERIAL PRIMARY KEY,
-    requester_user_id INTEGER NOT NULL REFERENCES users,
+    requester_user VARCHAR(30) NOT NULL REFERENCES users,
     group_conversation_id INTEGER NOT NULL REFERENCES group_conversations
 );
 
 CREATE TABLE blocked_user_to_group_conversations(
     id SERIAL PRIMARY KEY,
-    blocked_user_id INTEGER NOT NULL REFERENCES users,
+    blocked_user VARCHAR(30) NOT NULL REFERENCES users,
     group_conversation_id  INTEGER NOT NULL REFERENCES group_conversations
 );
 
 CREATE TABLE reports(
     id SERIAL PRIMARY KEY,
     content TEXT NOT NULL,
-    reporter_user_id INTEGER NOT NULL REFERENCES users,
-    reported_user_id INTEGER NOT NULL REFERENCES users,
+    reporter_user VARCHAR(30) NOT NULL REFERENCES users,
+    reported_user VARCHAR(30) NOT NULL REFERENCES users,
     checked BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -104,5 +104,32 @@ CREATE TABLE interests(
 CREATE TABLE interests_to_users(
     id SERIAL PRIMARY KEY,
     topic_id INTEGER NOT NULL REFERENCES interests,
-    user_id INTEGER NOT NULL REFERENCES users
+    username VARCHAR(30) NOT NULL REFERENCES users
 );
+
+INSERT INTO interests ("topic") VALUES 
+('sci-fi'),
+('anime/manga'),
+('superhero movies'),
+('disney movies'),
+('comics'),
+('pop music'),
+('cooking'),
+('video games'),
+('board games'),
+('hiking'),
+('traveling'),
+('football'),
+('coding'),
+('STEM'),
+('history'),
+('literature'),
+('theatre'),
+('golf'),
+('ice cream'),
+('gardening'),
+('art'),
+('horseback riding'),
+('karaoke'),
+('card games'),
+('card tricks');

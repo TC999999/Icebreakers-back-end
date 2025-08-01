@@ -6,6 +6,7 @@ const cookieParser = require("cookie-parser");
 const redisStore = require("./redis");
 const { NotFoundError } = require("./expressError");
 const authRoutes = require("./routes/auth");
+const interestsRoutes = require("./routes/interests");
 const { ORIGIN_DOMAIN, SESSION_SECRET_KEY } = require("./config");
 
 const app = express();
@@ -40,6 +41,7 @@ app.use(
 
 //Routes
 app.use("/auth", authRoutes);
+app.use("/interests", interestsRoutes);
 
 // 404 Error Handler
 app.use(function (req, res, next) {

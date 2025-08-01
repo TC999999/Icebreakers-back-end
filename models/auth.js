@@ -18,7 +18,7 @@ class Authorization {
         username, 
         favorite_color AS "favoriteColor", 
         is_admin AS "isAdmin", 
-        flagged AS "isFlagged"`,
+        is_flagged AS "isFlagged"`,
       [username, hashedPassword, emailAddress, favoriteColor]
     );
 
@@ -32,7 +32,7 @@ class Authorization {
             password, 
             favorite_color AS "favoriteColor", 
             is_admin AS "isAdmin", 
-            flagged AS "isFlagged" 
+            is_flagged AS "isFlagged" 
         FROM 
             users 
         WHERE 
