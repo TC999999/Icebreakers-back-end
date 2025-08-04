@@ -4,7 +4,13 @@ const { BCRYPT_WORK_FACTOR } = require("../config");
 const db = require("../db");
 
 class Authorization {
-  static async register({ username, password, emailAddress, favoriteColor }) {
+  static async register({
+    username,
+    password,
+    emailAddress,
+    biography,
+    favoriteColor,
+  }) {
     let hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
 
     const res = await db.query(
@@ -12,14 +18,15 @@ class Authorization {
         (username, 
         password, 
         email_address, 
+        biography,
         favorite_color) 
-      VALUES ($1, $2, $3, $4) 
+      VALUES ($1, $2, $3, $4, $5) 
       RETURNING 
         username, 
         favorite_color AS "favoriteColor", 
         is_admin AS "isAdmin", 
         is_flagged AS "isFlagged"`,
-      [username, hashedPassword, emailAddress, favoriteColor]
+      [username, hashedPassword, emailAddress, biography, favoriteColor]
     );
 
     return res.rows[0];

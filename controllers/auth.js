@@ -7,19 +7,20 @@ const registerUser = async (req, res, next) => {
       username,
       password,
       emailAddress,
-      favoriteColor,
       biography,
+      favoriteColor,
       interests,
     } = req.body;
     let user = await Authorization.register({
       username,
       password,
       emailAddress,
-      favoriteColor,
       biography,
+      favoriteColor,
     });
 
-    await Interests.addInterestsForUser(username, interests);
+    if (interests.length)
+      await Interests.addInterestsForUser(username, interests);
 
     req.session.user = {
       username: user.username,

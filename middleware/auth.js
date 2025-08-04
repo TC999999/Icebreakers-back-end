@@ -11,4 +11,18 @@ function ensureLoggedIn(req, res, next) {
   }
 }
 
-module.exports = { ensureLoggedIn };
+function ensureCorrectUser(req, res, next) {
+  try {
+    if (
+      !req.session.user ||
+      req.params.username !== req.session.user.username
+    ) {
+      throw new UnauthorizedError("This is not your information.");
+    }
+    return next();
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = { ensureLoggedIn, ensureCorrectUser };
