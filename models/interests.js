@@ -1,5 +1,5 @@
 const db = require("../db");
-const insertMultipleSQL = require("../helpers/insertMultipleSQL");
+const { insertMultipleSQL } = require("../helpers/insertMultipleSQL");
 
 class Interests {
   static async getInterests() {

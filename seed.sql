@@ -20,7 +20,7 @@ CREATE TABLE users(
     password TEXT NOT NULL,
     email_address TEXT NOT NULL UNIQUE CHECK (position('@' IN email_address) > 1),
     biography VARCHAR(200),
-    favorite_color VARCHAR(7),
+    favorite_color VARCHAR(7) CHECK (position("#" IN favorite_color) === 0),
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
     is_flagged BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -107,6 +107,12 @@ CREATE TABLE interests_to_users(
     username VARCHAR(30) NOT NULL REFERENCES users
 );
 
+INSERT INTO users ("username","password", "email_address", "biography", "favorite_color") VALUES
+('testuser1','$2b$12$WS.iDEiC6IUjjcf/.YzMROm8cYDyUBWHILEGqYxq3ObeXdl.VyXeq','testemail1@gmail.com','first test biography', '#162ee9'),
+('testuser2','$2b$12$gIyS8OFeKKOZmptFGxUsGetXSqp9XJpZJifAeeQARIFK.qbLwt23W','testemail2@gmail.com','second test biography', '#eb1414'),
+('testuser3','$2b$12$yhUkB1qiDpgCWn3Ujh2uJu3aqJhu0AEYjOjlpXH9XRXPxwthSqIz6','testemail3@gmail.com','third test biography', '#4d2aed'),
+('testuser4','$2b$12$67KHDtYqh9vvoCqYROJMbOd82nV.DE25t3wvDE99cy1S6qsTrjA9a','testemail4@gmail.com','fourth test biography', '#35ed5a ');
+
 INSERT INTO interests ("topic") VALUES 
 ('sci-fi'),
 ('anime/manga'),
@@ -123,6 +129,7 @@ INSERT INTO interests ("topic") VALUES
 ('coding'),
 ('STEM'),
 ('history'),
+('astronomy'),
 ('literature'),
 ('theatre'),
 ('golf'),

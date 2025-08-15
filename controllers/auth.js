@@ -29,7 +29,7 @@ const registerUser = async (req, res, next) => {
       isFlagged: user.isFlagged,
     };
 
-    return res.status(200).send({ user });
+    return res.status(201).send({ user });
   } catch (err) {
     return next(err);
   }
