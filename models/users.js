@@ -56,9 +56,8 @@ class User {
     const users = await db.query(
       `SELECT 
         users.username, 
-        JSON_AGG(interests.topic) 
-      AS 
-        interests 
+        users.favorite_color as favoriteColor,
+        JSON_AGG(interests.topic) AS interests 
       FROM 
         users 
       JOIN 
