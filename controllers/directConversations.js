@@ -1,14 +1,38 @@
 const DirectConversations = require("../models/directConversations");
 
+const makeRequest = async (req, res, next) => {
+  try {
+    const { requester_user, requested_user, content } = req.body;
+    const request = await DirectConversations.makeRequest(
+      requester_user,
+      requested_user,
+      content
+    );
+    return res.status(201).send({ request });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 const createNewConversation = async (req, res, next) => {
   try {
-    const { title, user_1, user_2 } = req.body;
-    const conversation = await DirectConversations.createNewConversation({
-      title,
-      user_1,
-      user_2,
-    });
-    return res.status(201).send({ conversation });
+    const { direct_request_id, requested_user, accepted } = req.body;
+    const response = await DirectConversations.respondToRequest(
+      direct_request_id,
+      requested_user,
+      accepted
+    );
+
+    if (response.isAccepted) {
+      const conversation = await DirectConversations.createNewConversation({
+        title,
+        user_1: response.user_1,
+        user_2: response.user_2,
+      });
+      return res.status(201).send({ conversation });
+    } else {
+      return res.status(201).send({ message: "Request not accepted" });
+    }
   } catch (err) {
     return next(err);
   }
@@ -45,4 +69,5 @@ module.exports = {
   createNewConversation,
   createNewMessage,
   getConversationMessages,
+  makeRequest,
 };

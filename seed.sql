@@ -20,7 +20,7 @@ CREATE TABLE users(
     password TEXT NOT NULL,
     email_address TEXT NOT NULL UNIQUE CHECK (position('@' IN email_address) > 1),
     biography VARCHAR(200),
-    favorite_color VARCHAR(7) CHECK (position("#" IN favorite_color) === 0),
+    favorite_color VARCHAR(7) CHECK (position('#' IN favorite_color) = 1),
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
     is_flagged BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -45,7 +45,11 @@ CREATE TABLE direct_conversations_messages(
 CREATE TABLE direct_conversation_requests(
     id SERIAL PRIMARY KEY,
     requester_user VARCHAR(30) NOT NULL REFERENCES users,
-    requested_user VARCHAR(30) NOT NULL REFERENCES users
+    requested_user VARCHAR(30) NOT NULL REFERENCES users,
+    content VARCHAR(100) NOT NULL,
+    is_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    is_seen BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE blocker_user_to_blocked_user(
@@ -78,7 +82,11 @@ CREATE TABLE user_to_group_conversations(
 CREATE TABLE group_conversation_requests(
     id SERIAL PRIMARY KEY,
     requester_user VARCHAR(30) NOT NULL REFERENCES users,
-    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations
+    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations,
+    content VARCHAR(100) NOT NULL,
+    is_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    is_seen BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE blocked_user_to_group_conversations(
@@ -113,7 +121,7 @@ INSERT INTO users ("username","password", "email_address", "biography", "favorit
 ('testuser3','$2b$12$yhUkB1qiDpgCWn3Ujh2uJu3aqJhu0AEYjOjlpXH9XRXPxwthSqIz6','testemail3@gmail.com','third test biography', '#4d2aed'),
 ('testuser4','$2b$12$67KHDtYqh9vvoCqYROJMbOd82nV.DE25t3wvDE99cy1S6qsTrjA9a','testemail4@gmail.com','fourth test biography', '#35ed5a ');
 
-INSERT INTO interests ("topic") VALUES 
+INSERT INTO interests ("topic") VALUES
 ('sci-fi'),
 ('anime/manga'),
 ('superhero movies'),
@@ -140,3 +148,17 @@ INSERT INTO interests ("topic") VALUES
 ('karaoke'),
 ('card games'),
 ('card tricks');
+
+INSERT INTO interests_to_users ("topic_id", "username") VALUES
+(1,'testuser1'),
+(2,'testuser1'),
+(3,'testuser1'),
+(4,'testuser2'),
+(5,'testuser2'),
+(6,'testuser2'),
+(1,'testuser3'),
+(3,'testuser3'),
+(5,'testuser3'),
+(2,'testuser4'),
+(4,'testuser4'),
+(6,'testuser4');

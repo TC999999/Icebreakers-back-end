@@ -13,4 +13,13 @@ const getUserProfile = async (req, res, next) => {
   }
 };
 
-module.exports = { getUserProfile };
+const getAllUsers = async (req, res, next) => {
+  try {
+    const users = await User.getAllUsers();
+    return res.status(200).send({ users });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+module.exports = { getUserProfile, getAllUsers };

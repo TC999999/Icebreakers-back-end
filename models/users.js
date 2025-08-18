@@ -51,6 +51,30 @@ class User {
 
     return [...directConversations.rows, ...groupConversations.rows];
   }
+
+  static async getAllUsers() {
+    const users = await db.query(
+      `SELECT 
+        users.username, 
+        JSON_AGG(interests.topic) 
+      AS 
+        interests 
+      FROM 
+        users 
+      JOIN 
+        interests_to_users 
+      ON 
+        users.username=interests_to_users.username 
+      JOIN 
+        interests 
+      ON 
+        interests_to_users.topic_id=interests.id 
+      GROUP BY 
+        users.username`
+    );
+
+    return users.rows;
+  }
 }
 
 module.exports = User;

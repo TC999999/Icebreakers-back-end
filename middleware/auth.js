@@ -25,4 +25,39 @@ function ensureCorrectUser(req, res, next) {
   }
 }
 
-module.exports = { ensureLoggedIn, ensureCorrectUser };
+function ensureCorrectUserForRequest(req, res, next) {
+  try {
+    if (
+      !req.session.user ||
+      req.body.requester_user !== req.session.user.username
+    ) {
+      throw new UnauthorizedError("Cannot make a request for another user!");
+    }
+    return next();
+  } catch (err) {
+    return next(err);
+  }
+}
+
+function ensureCorrectUserForReponse(req, res, next) {
+  try {
+    if (
+      !req.session.user ||
+      req.body.requested_user !== req.session.user.username
+    ) {
+      throw new UnauthorizedError(
+        "Cannot reponse to a request for another user!"
+      );
+    }
+    return next();
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = {
+  ensureLoggedIn,
+  ensureCorrectUser,
+  ensureCorrectUserForRequest,
+  ensureCorrectUserForReponse,
+};
