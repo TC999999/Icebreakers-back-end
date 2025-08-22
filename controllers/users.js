@@ -15,11 +15,29 @@ const getUserProfile = async (req, res, next) => {
 
 const getAllUsers = async (req, res, next) => {
   try {
-    const users = await User.getAllUsers();
+    const users = await User.getAllUsers(req.session.user.username);
     return res.status(200).send({ users });
   } catch (err) {
     return next(err);
   }
 };
 
-module.exports = { getUserProfile, getAllUsers };
+const searchForUsers = async (req, res, next) => {
+  try {
+    const { username, findSimilarInterests } = req.query;
+    const interests = await User.getSingleUserInterests(
+      req.session.user.username,
+      findSimilarInterests
+    );
+    const users = await User.searchForUsers(
+      req.session.user.username,
+      username,
+      interests
+    );
+    return res.status(200).send({ users });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+module.exports = { getUserProfile, getAllUsers, searchForUsers };

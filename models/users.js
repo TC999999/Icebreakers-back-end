@@ -1,4 +1,5 @@
 const db = require("../db");
+const constructSearchString = require("../helpers/constructSearchString");
 
 class User {
   static async getUserProfile(username) {
@@ -52,11 +53,56 @@ class User {
     return [...directConversations.rows, ...groupConversations.rows];
   }
 
-  static async getAllUsers() {
+  static async getAllUsers(username) {
+    const users = await db.query(
+      `SELECT 
+        users.username 
+      FROM 
+        users 
+      WHERE
+        users.username!=$1`,
+      [username]
+    );
+
+    return users.rows.map((user) => {
+      return user.username;
+    });
+  }
+
+  static async getSingleUserInterests(username, findSimilarInterests) {
+    if (findSimilarInterests) {
+      const res = await db.query(
+        `SELECT 
+        JSON_AGG(interests.topic) 
+      AS 
+        interests 
+      FROM 
+        users 
+      JOIN 
+        interests_to_users 
+      ON 
+        users.username=interests_to_users.username 
+      JOIN 
+        interests 
+      ON 
+        interests_to_users.topic_id=interests.id 
+      WHERE 
+        users.username=$1`,
+        [username]
+      );
+
+      return res.rows[0].interests;
+    }
+    return [];
+  }
+
+  static async searchForUsers(currentUsername, username, interests) {
+    const { filterString, values } = constructSearchString(username, interests);
+
     const users = await db.query(
       `SELECT 
         users.username, 
-        users.favorite_color as favoriteColor,
+        users.favorite_color AS favoriteColor,
         JSON_AGG(interests.topic) AS interests 
       FROM 
         users 
@@ -68,8 +114,15 @@ class User {
         interests 
       ON 
         interests_to_users.topic_id=interests.id 
+      WHERE
+        users.username!=$1
+      ${filterString}
       GROUP BY 
-        users.username`
+        users.username
+      ORDER BY
+        JSON_ARRAY_LENGTH(JSON_AGG(interests.topic))
+      DESC`,
+      [currentUsername, ...values]
     );
 
     return users.rows;
