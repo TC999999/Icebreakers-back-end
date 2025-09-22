@@ -1,7 +1,26 @@
 const db = require("../db");
 const constructSearchString = require("../helpers/constructSearchString");
+const { NotFoundError } = require("../expressError");
 
 class User {
+  static async userCheck(username) {
+    const res = await db.query(
+      `SELECT 
+            username
+        FROM 
+            users
+        WHERE
+            username=$1`,
+      [username]
+    );
+
+    let user = res.rows[0];
+    if (user) {
+      return user;
+    } else {
+      throw new NotFoundError("User does not exist!");
+    }
+  }
   static async getUserProfile(username) {
     const res = await db.query(
       `SELECT 
@@ -16,7 +35,12 @@ class User {
       [username]
     );
 
-    return res.rows[0];
+    let user = res.rows[0];
+    if (user) {
+      return user;
+    } else {
+      throw new NotFoundError("User does not exist!");
+    }
   }
 
   static async getAllUserConversations(username) {

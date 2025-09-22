@@ -8,6 +8,7 @@ const { NotFoundError } = require("./expressError");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");
 const interestsRoutes = require("./routes/interests");
+const directMessagesRoutes = require("./routes/directConversations");
 const { ORIGIN_DOMAIN, SESSION_SECRET_KEY } = require("./config");
 
 const app = express();
@@ -35,7 +36,7 @@ app.use(
       secure: false,
       httpOnly: true,
       sameSite: "strict",
-      maxAge: 60 * 60 * 1000,
+      maxAge: 60 * 60 * 6000,
     },
   })
 );
@@ -44,6 +45,7 @@ app.use(
 app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/interests", interestsRoutes);
+app.use("/directMessage", directMessagesRoutes);
 
 // 404 Error Handler
 app.use(function (req, res, next) {

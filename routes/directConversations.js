@@ -4,9 +4,11 @@ const {
   createNewMessage,
   getConversationMessages,
   makeRequest,
+  getDirectMessageRequests,
 } = require("../controllers/directConversations");
 const {
   ensureLoggedIn,
+  ensureCorrectUser,
   ensureCorrectUserForRequest,
   ensureCorrectUserForReponse,
 } = require("../middleware/auth");
@@ -15,6 +17,8 @@ const router = express.Router();
 
 // router.post("/new", ensureLoggedIn, createNewConversation);
 router.post("/request", ensureCorrectUserForRequest, makeRequest);
+
+router.get("/request/:username", ensureCorrectUser, getDirectMessageRequests);
 
 router.post("/response", ensureCorrectUserForReponse, createNewConversation);
 

@@ -1,6 +1,17 @@
 const User = require("../models/users");
 const Interests = require("../models/interests");
 
+const userCheck = async (req, res, next) => {
+  try {
+    const { username } = req.params;
+    const user = await User.userCheck(username);
+
+    return res.status(200).send({ user });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 const getUserProfile = async (req, res, next) => {
   try {
     const { username } = req.params;
@@ -40,4 +51,4 @@ const searchForUsers = async (req, res, next) => {
   }
 };
 
-module.exports = { getUserProfile, getAllUsers, searchForUsers };
+module.exports = { userCheck, getUserProfile, getAllUsers, searchForUsers };

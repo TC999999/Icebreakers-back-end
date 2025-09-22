@@ -116,26 +116,26 @@ class DirectConversations {
     return res.rows;
   }
 
-  static async makeRequest(requester_user, requested_user, content) {
-    if (requester_user === requested_user) {
+  static async makeRequest(requestedUser, requesterUser, content) {
+    if (requestedUser === requesterUser) {
       throw new UnacceptableError("Cannot make conversation with yourself");
     }
 
     const doublesCheck = await db.query(
       `SELECT 
-            requester_user AS 'requesterUser',
-            requested_user AS 'requestedUser'
+            requested_user AS "requestedUser",
+            requester_user AS "requesterUser"
         FROM
             direct_conversation_requests
         WHERE
-            requester_user=$1 
+            requested_user=$1 
         AND
-            requested_user=$2
+            requester_user=$2
         OR
-            requester_user=$2 
+            requested_user=$2 
         AND
-            requested_user=$1`,
-      [requester_user, requested_user]
+            requester_user=$1`,
+      [requestedUser, requesterUser]
     );
 
     if (doublesCheck.rows[0]) {
@@ -144,20 +144,52 @@ class DirectConversations {
 
     const res = await db.query(
       `INSERT INTO direct_conversation_requests
-            (requester_user,
-            requested_user,
+            (requested_user,
+            requester_user,
             content)
-        VALUES ($1, $2)
+        VALUES ($1, $2, $3)
         RETURNING
             id,
-            requester_user AS 'requesterUser',
-            requested_user AS 'requestedUser',
+            requested_user AS "requestedUser",
+            requester_user AS "requesterUser",
             content,
-            created_at AS 'createdAt'`,
-      [requester_user, requested_user]
+            created_at AS "createdAt"`,
+      [requestedUser, requesterUser, content]
     );
 
     return res.rows[0];
+  }
+
+  static async getDirectMessageRequests(username) {
+    const sentRequests = await db.query(
+      `SELECT
+        requested_user AS "requestedUser",
+        content,
+        created_at AS "createdAt"
+      FROM
+        direct_conversation_requests
+      WHERE
+        requester_user=$1`,
+      [username]
+    );
+
+    const sentRequestList = sentRequests.rows;
+
+    const receivedRequests = await db.query(
+      `SELECT
+        requester_user AS "requesterUser",
+        content,
+        created_at AS "createdAt"
+      FROM
+        direct_conversation_requests
+      WHERE
+        requested_user=$1`,
+      [username]
+    );
+
+    const receivedRequestList = receivedRequests.rows;
+
+    return { sentRequestList, receivedRequestList };
   }
 
   static async respondToRequest(id, requested_user, accepted) {

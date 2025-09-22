@@ -44,8 +44,8 @@ CREATE TABLE direct_conversations_messages(
 
 CREATE TABLE direct_conversation_requests(
     id SERIAL PRIMARY KEY,
-    requester_user VARCHAR(30) NOT NULL REFERENCES users,
     requested_user VARCHAR(30) NOT NULL REFERENCES users,
+    requester_user VARCHAR(30) NOT NULL REFERENCES users,
     content VARCHAR(100) NOT NULL,
     is_accepted BOOLEAN NOT NULL DEFAULT FALSE,
     is_seen BOOLEAN NOT NULL DEFAULT FALSE,

@@ -29,7 +29,7 @@ function ensureCorrectUserForRequest(req, res, next) {
   try {
     if (
       !req.session.user ||
-      req.body.requester_user !== req.session.user.username
+      req.body.requesterUser !== req.session.user.username
     ) {
       throw new UnauthorizedError("Cannot make a request for another user!");
     }

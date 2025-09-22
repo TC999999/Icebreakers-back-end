@@ -2,13 +2,25 @@ const DirectConversations = require("../models/directConversations");
 
 const makeRequest = async (req, res, next) => {
   try {
-    const { requester_user, requested_user, content } = req.body;
+    const { requestedUser, requesterUser, content } = req.body;
     const request = await DirectConversations.makeRequest(
-      requester_user,
-      requested_user,
+      requestedUser,
+      requesterUser,
       content
     );
     return res.status(201).send({ request });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+const getDirectMessageRequests = async (req, res, next) => {
+  try {
+    const { username } = req.params;
+    const requests = await DirectConversations.getDirectMessageRequests(
+      username
+    );
+    return res.status(200).send({ requests });
   } catch (err) {
     return next(err);
   }
@@ -68,6 +80,7 @@ const getConversationMessages = async (req, res, next) => {
 module.exports = {
   createNewConversation,
   createNewMessage,
+  getDirectMessageRequests,
   getConversationMessages,
   makeRequest,
 };
