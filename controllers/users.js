@@ -15,7 +15,8 @@ const userCheck = async (req, res, next) => {
 const getUserProfile = async (req, res, next) => {
   try {
     const { username } = req.params;
-    const userRes = await User.getUserProfile(username);
+    const currentUser = req.session.user.username;
+    const userRes = await User.getUserProfile(username, currentUser);
     const userInterests = await Interests.getUserInterests(username);
     const user = { ...userRes, interests: userInterests };
     return res.status(200).send({ user });

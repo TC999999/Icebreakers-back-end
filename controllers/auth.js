@@ -60,7 +60,6 @@ const logInUser = async (req, res, next) => {
 const getCurrentUser = async (req, res, next) => {
   try {
     let user;
-
     if (req.session.user) {
       user = req.session.user;
     } else {

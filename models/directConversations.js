@@ -2,6 +2,28 @@ const db = require("../db");
 const { NotFoundError, UnacceptableError } = require("../expressError");
 
 class DirectConversations {
+  static async checkRequests(username1, username2) {
+    if (username1 !== username2) {
+      const requestCheck = await db.query(
+        `SELECT 
+              requested_user AS "requestedUser",
+              requester_user AS "requesterUser"
+          FROM
+              direct_conversation_requests
+          WHERE
+              requested_user=$1 
+          AND
+              requester_user=$2
+          OR
+              requested_user=$2 
+          AND
+              requester_user=$1`,
+        [username1, username2]
+      );
+
+      return requestCheck.rows[0] !== undefined;
+    }
+  }
   static async createNewConversation({ title, user_1, user_2 }) {
     const doublesCheck = await db.query(
       `SELECT 

@@ -1,45 +1,21 @@
 const express = require("express");
-const cors = require("cors");
 const morgan = require("morgan");
-const session = require("express-session");
-const cookieParser = require("cookie-parser");
-const redisStore = require("./redis");
+// const cookieParser = require("cookie-parser");
 const { NotFoundError } = require("./expressError");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");
 const interestsRoutes = require("./routes/interests");
 const directMessagesRoutes = require("./routes/directConversations");
-const { ORIGIN_DOMAIN, SESSION_SECRET_KEY } = require("./config");
-
+const { sessionMiddleware, corsMiddleware } = require("./serverConfig");
 const app = express();
 
-app.use(cookieParser());
-app.use(
-  cors({
-    origin: ORIGIN_DOMAIN,
-    credentials: true,
-  })
-);
-
+// Middleware
+// app.use(cookieParser());
+app.use(corsMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 app.use(morgan("tiny"));
-
-app.use(
-  session({
-    store: redisStore,
-    secret: SESSION_SECRET_KEY,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: false,
-      httpOnly: true,
-      sameSite: "strict",
-      maxAge: 60 * 60 * 6000,
-    },
-  })
-);
+app.use(sessionMiddleware);
 
 //Routes
 app.use("/auth", authRoutes);

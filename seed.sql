@@ -21,78 +21,11 @@ CREATE TABLE users(
     email_address TEXT NOT NULL UNIQUE CHECK (position('@' IN email_address) > 1),
     biography VARCHAR(200),
     favorite_color VARCHAR(7) CHECK (position('#' IN favorite_color) = 1),
+    unread_messages INTEGER NOT NULL DEFAULT 0,
+    unanswered_requests INTEGER NOT NULL DEFAULT 0,
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
     is_flagged BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE direct_conversations(
-    id SERIAL PRIMARY KEY,
-    title TEXT NOT NULL,
-    user_1 VARCHAR(30) NOT NULL REFERENCES users,
-    user_2 VARCHAR(30) NOT NULL REFERENCES users,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE direct_conversations_messages(
-    id SERIAL PRIMARY KEY,
-    content TEXT NOT NULL,
-    username VARCHAR(30) NOT NULL REFERENCES users,
-    direct_conversation_id INTEGER NOT NULL REFERENCES direct_conversations,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE direct_conversation_requests(
-    id SERIAL PRIMARY KEY,
-    requested_user VARCHAR(30) NOT NULL REFERENCES users,
-    requester_user VARCHAR(30) NOT NULL REFERENCES users,
-    content VARCHAR(100) NOT NULL,
-    is_accepted BOOLEAN NOT NULL DEFAULT FALSE,
-    is_seen BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE blocker_user_to_blocked_user(
-    id SERIAL PRIMARY KEY,
-    blocker_user VARCHAR(30) NOT NULL REFERENCES users,
-    blocked_user VARCHAR(30) NOT NULL REFERENCES users
-);
-
-CREATE TABLE group_conversations(
-    id SERIAL PRIMARY KEY,
-    title TEXT NOT NULL,
-    host VARCHAR(30) NOT NULL REFERENCES users,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE group_conversations_messages(
-    id SERIAL PRIMARY KEY,
-    content TEXT NOT NULL,
-    username VARCHAR(30) NOT NULL REFERENCES users,
-    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE user_to_group_conversations(
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(30) NOT NULL REFERENCES users,
-    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations
-);
-
-CREATE TABLE group_conversation_requests(
-    id SERIAL PRIMARY KEY,
-    requester_user VARCHAR(30) NOT NULL REFERENCES users,
-    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations,
-    content VARCHAR(100) NOT NULL,
-    is_accepted BOOLEAN NOT NULL DEFAULT FALSE,
-    is_seen BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE blocked_user_to_group_conversations(
-    id SERIAL PRIMARY KEY,
-    blocked_user VARCHAR(30) NOT NULL REFERENCES users,
-    group_conversation_id  INTEGER NOT NULL REFERENCES group_conversations
 );
 
 CREATE TABLE reports(
@@ -112,7 +45,103 @@ CREATE TABLE interests(
 CREATE TABLE interests_to_users(
     id SERIAL PRIMARY KEY,
     topic_id INTEGER NOT NULL REFERENCES interests,
-    username VARCHAR(30) NOT NULL REFERENCES users
+    user VARCHAR(30) NOT NULL REFERENCES users
+);
+
+CREATE TABLE direct_conversations(
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL DEFAULT "New Conversation",
+    user_1 VARCHAR(30) NOT NULL REFERENCES users,
+    user_2 VARCHAR(30) NOT NULL REFERENCES users,
+    is_typing VARCHAR(30)[],
+    last_message_id INTEGER REFERENCES direct_conversations_messages,
+    last_updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE direct_conversations_messages(
+    id SERIAL PRIMARY KEY,
+    content TEXT NOT NULL,
+    user VARCHAR(30) NOT NULL REFERENCES users,
+    direct_conversation_id INTEGER NOT NULL REFERENCES direct_conversations,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE blocker_user_to_blocked_user(
+    id SERIAL PRIMARY KEY,
+    blocker_user VARCHAR(30) NOT NULL REFERENCES users,
+    blocked_user VARCHAR(30) NOT NULL REFERENCES users
+);
+
+CREATE TABLE direct_conversation_requests(
+    id SERIAL PRIMARY KEY,
+    requested_user VARCHAR(30) NOT NULL REFERENCES users,
+    requester_user VARCHAR(30) NOT NULL REFERENCES users,
+    content VARCHAR(100) NOT NULL,
+    is_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    is_seen BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE group_conversations(
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    CHECK (LENGTH(description) <= 400)
+    host VARCHAR(30) NOT NULL REFERENCES users,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE group_conversations_messages(
+    id SERIAL PRIMARY KEY,
+    content TEXT NOT NULL,
+    user VARCHAR(30) NOT NULL REFERENCES users,
+    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_to_group_conversations(
+    id SERIAL PRIMARY KEY,
+    user VARCHAR(30) NOT NULL REFERENCES users,
+    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations
+);
+
+CREATE TABLE blocked_user_to_group_conversations(
+    id SERIAL PRIMARY KEY,
+    blocked_user VARCHAR(30) NOT NULL REFERENCES users,
+    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations
+);
+
+CREATE TABLE group_conversation_requests(
+    id SERIAL PRIMARY KEY,
+    requester_user VARCHAR(30) NOT NULL REFERENCES users,
+    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations,
+    content VARCHAR(100) NOT NULL,
+    is_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    is_seen BOOLEAN NOT NULL DEFAULT FALSE,
+    is_removed BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    sent_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE group_conversation_invitations(
+    id SERIAL PRIMARY KEY,
+    inviter_user VARCHAR(30) NOT NULL REFERENCES users,
+    invited_user VARCHAR(30) NOT NULL REFERENCES users,
+    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations,
+    content VARCHAR(100) NOT NULL,
+    is_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    is_approved BOOLEAN NOT NULL DEFAULT FALSE,
+    is_seen BOOLEAN NOT NULL DEFAULT FALSE,
+    is_removed BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    sent_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE interests_to_group_conversations(
+    id SERIAL PRIMARY KEY,
+    topic_id INTEGER NOT NULL REFERENCES interests,
+    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations
 );
 
 INSERT INTO users ("username","password", "email_address", "biography", "favorite_color") VALUES
