@@ -3,12 +3,13 @@ const DirectConversations = require("../models/directConversations");
 const makeRequest = async (req, res, next) => {
   try {
     const { requestedUser, requesterUser, content } = req.body;
-    const request = await DirectConversations.makeRequest(
-      requestedUser,
-      requesterUser,
-      content
-    );
-    return res.status(201).send({ request });
+    const { request, unansweredRequests } =
+      await DirectConversations.makeRequest(
+        requestedUser,
+        requesterUser,
+        content
+      );
+    return res.status(201).send({ request, unansweredRequests });
   } catch (err) {
     return next(err);
   }

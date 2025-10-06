@@ -164,7 +164,7 @@ class DirectConversations {
       throw new UnacceptableError("Request has already been made");
     }
 
-    const res = await db.query(
+    const requestRes = await db.query(
       `INSERT INTO direct_conversation_requests
             (requested_user,
             requester_user,
@@ -179,7 +179,23 @@ class DirectConversations {
       [requestedUser, requesterUser, content]
     );
 
-    return res.rows[0];
+    const request = requestRes.rows[0];
+
+    const unansweredRequestsRes = await db.query(
+      `UPDATE 
+        users 
+      SET
+        unanswered_requests = unanswered_requests + 1
+      WHERE
+        username=$1
+      RETURNING
+        unanswered_requests AS "unansweredRequests"`,
+      [requestedUser]
+    );
+
+    const unansweredRequests = unansweredRequestsRes.rows[0];
+
+    return { request, unansweredRequests };
   }
 
   static async getDirectMessageRequests(username) {
@@ -191,11 +207,29 @@ class DirectConversations {
       FROM
         direct_conversation_requests
       WHERE
-        requester_user=$1`,
+        requester_user=$1
+      AND
+        is_removed=false`,
       [username]
     );
 
     const sentRequestList = sentRequests.rows;
+
+    const removedRequests = await db.query(
+      `SELECT
+        requested_user AS "requestedUser",
+        content,
+        created_at AS "createdAt"
+      FROM
+        direct_conversation_requests
+      WHERE
+        requester_user=$1
+      AND
+        is_removed=true`,
+      [username]
+    );
+
+    const removedRequestList = removedRequests.rows;
 
     const receivedRequests = await db.query(
       `SELECT
@@ -211,7 +245,7 @@ class DirectConversations {
 
     const receivedRequestList = receivedRequests.rows;
 
-    return { sentRequestList, receivedRequestList };
+    return { sentRequestList, receivedRequestList, removedRequestList };
   }
 
   static async respondToRequest(id, requested_user, accepted) {

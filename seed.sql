@@ -5,14 +5,21 @@ CREATE DATABASE messages;
 \c messages
 
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS reports;
+DROP TABLE IF EXISTS interests;
+DROP TABLE IF EXISTS interests_to_users;
 DROP TABLE IF EXISTS direct_conversations;
 DROP TABLE IF EXISTS direct_conversations_messages;
 DROP TABLE IF EXISTS blocker_user_to_blocked_user;
+DROP TABLE IF EXISTS direct_conversations_requests;
 DROP TABLE IF EXISTS group_conversations;
 DROP TABLE IF EXISTS group_conversations_messages;
 DROP TABLE IF EXISTS users_to_group_conversations;
 DROP TABLE IF EXISTS blocked_users_to_group_conversations;
-DROP TABLE IF EXISTS reports;
+DROP TABLE IF EXISTS group_conversations_requests;
+DROP TABLE IF EXISTS blocked_users_to_group_conversations;
+DROP TABLE IF EXISTS group_conversations_invitations;
+DROP TABLE IF EXISTS interests_to_group_conversations;
 
 
 CREATE TABLE users(
@@ -45,16 +52,14 @@ CREATE TABLE interests(
 CREATE TABLE interests_to_users(
     id SERIAL PRIMARY KEY,
     topic_id INTEGER NOT NULL REFERENCES interests,
-    user VARCHAR(30) NOT NULL REFERENCES users
+    username VARCHAR(30) NOT NULL REFERENCES users
 );
 
 CREATE TABLE direct_conversations(
     id SERIAL PRIMARY KEY,
-    title TEXT NOT NULL DEFAULT "New Conversation",
+    title TEXT NOT NULL DEFAULT 'New Conversation',
     user_1 VARCHAR(30) NOT NULL REFERENCES users,
     user_2 VARCHAR(30) NOT NULL REFERENCES users,
-    is_typing VARCHAR(30)[],
-    last_message_id INTEGER REFERENCES direct_conversations_messages,
     last_updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -62,7 +67,7 @@ CREATE TABLE direct_conversations(
 CREATE TABLE direct_conversations_messages(
     id SERIAL PRIMARY KEY,
     content TEXT NOT NULL,
-    user VARCHAR(30) NOT NULL REFERENCES users,
+    username VARCHAR(30) NOT NULL REFERENCES users,
     direct_conversation_id INTEGER NOT NULL REFERENCES direct_conversations,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -80,6 +85,7 @@ CREATE TABLE direct_conversation_requests(
     content VARCHAR(100) NOT NULL,
     is_accepted BOOLEAN NOT NULL DEFAULT FALSE,
     is_seen BOOLEAN NOT NULL DEFAULT FALSE,
+    is_removed BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -87,22 +93,22 @@ CREATE TABLE group_conversations(
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
-    CHECK (LENGTH(description) <= 400)
-    host VARCHAR(30) NOT NULL REFERENCES users,
+    CHECK (LENGTH(description) <= 400),
+    host_user VARCHAR(30) NOT NULL REFERENCES users,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE group_conversations_messages(
     id SERIAL PRIMARY KEY,
     content TEXT NOT NULL,
-    user VARCHAR(30) NOT NULL REFERENCES users,
+    username VARCHAR(30) NOT NULL REFERENCES users,
     group_conversation_id INTEGER NOT NULL REFERENCES group_conversations,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE user_to_group_conversations(
     id SERIAL PRIMARY KEY,
-    user VARCHAR(30) NOT NULL REFERENCES users,
+    username VARCHAR(30) NOT NULL REFERENCES users,
     group_conversation_id INTEGER NOT NULL REFERENCES group_conversations
 );
 

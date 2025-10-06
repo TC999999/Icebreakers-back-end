@@ -27,6 +27,8 @@ const registerUser = async (req, res, next) => {
       favoriteColor: user.favoriteColor,
       isAdmin: user.isAdmin,
       isFlagged: user.isFlagged,
+      unansweredRequests: user.unansweredRequests,
+      unreadMessages: user.unreadMessages,
     };
 
     return res.status(201).send({ user });
@@ -49,6 +51,8 @@ const logInUser = async (req, res, next) => {
       favoriteColor: user.favoriteColor,
       isAdmin: user.isAdmin,
       isFlagged: user.isFlagged,
+      unansweredRequests: user.unansweredRequests,
+      unreadMessages: user.unreadMessages,
     };
 
     return res.status(200).send({ user });
@@ -65,6 +69,7 @@ const getCurrentUser = async (req, res, next) => {
     } else {
       user = null;
     }
+    // console.log(user);
     return res.status(200).send({ user });
   } catch (err) {
     return next(err);
