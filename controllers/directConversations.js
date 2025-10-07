@@ -15,6 +15,27 @@ const makeRequest = async (req, res, next) => {
   }
 };
 
+const removeRequest = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { unansweredRequests } = await DirectConversations.removeRequest(id);
+    return res.status(200).send({ unansweredRequests });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+const resendRequest = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { resentRequest, unansweredRequests } =
+      await DirectConversations.resendRequest(id);
+    return res.status(200).send({ resentRequest, unansweredRequests });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 const getDirectMessageRequests = async (req, res, next) => {
   try {
     const { username } = req.params;
@@ -81,6 +102,8 @@ const getConversationMessages = async (req, res, next) => {
 module.exports = {
   createNewConversation,
   createNewMessage,
+  removeRequest,
+  resendRequest,
   getDirectMessageRequests,
   getConversationMessages,
   makeRequest,

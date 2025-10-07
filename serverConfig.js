@@ -12,7 +12,7 @@ const sessionMiddleware = session({
     secure: false,
     httpOnly: true,
     sameSite: "strict",
-    maxAge: 60 * 60 * 1000,
+    maxAge: 60 * 60 * 3000,
   },
 });
 

@@ -4,11 +4,14 @@ const {
   createNewMessage,
   getConversationMessages,
   makeRequest,
+  removeRequest,
+  resendRequest,
   getDirectMessageRequests,
 } = require("../controllers/directConversations");
 const {
   ensureLoggedIn,
   ensureCorrectUser,
+  checkRequestAuth,
   ensureCorrectUserForRequest,
   ensureCorrectUserForReponse,
 } = require("../middleware/auth");
@@ -19,6 +22,10 @@ const router = express.Router();
 router.post("/request", ensureCorrectUserForRequest, makeRequest);
 
 router.get("/request/:username", ensureCorrectUser, getDirectMessageRequests);
+
+router.patch("/request/remove/:id", removeRequest);
+
+router.patch("/request/resend/:id", checkRequestAuth, resendRequest);
 
 router.post("/response", ensureCorrectUserForReponse, createNewConversation);
 

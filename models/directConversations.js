@@ -24,6 +24,21 @@ class DirectConversations {
       return requestCheck.rows[0] !== undefined;
     }
   }
+
+  static async getRequestById(id) {
+    const requestCheck = await db.query(
+      `SELECT 
+            requester_user AS "requesterUser"
+        FROM
+            direct_conversation_requests
+        WHERE
+            id=$1`,
+      [id]
+    );
+
+    return requestCheck.rows[0];
+  }
+
   static async createNewConversation({ title, user_1, user_2 }) {
     const doublesCheck = await db.query(
       `SELECT 
@@ -201,6 +216,7 @@ class DirectConversations {
   static async getDirectMessageRequests(username) {
     const sentRequests = await db.query(
       `SELECT
+        id,
         requested_user AS "requestedUser",
         content,
         created_at AS "createdAt"
@@ -217,6 +233,7 @@ class DirectConversations {
 
     const removedRequests = await db.query(
       `SELECT
+        id,
         requested_user AS "requestedUser",
         content,
         created_at AS "createdAt"
@@ -233,19 +250,90 @@ class DirectConversations {
 
     const receivedRequests = await db.query(
       `SELECT
+        id,
         requester_user AS "requesterUser",
         content,
         created_at AS "createdAt"
       FROM
         direct_conversation_requests
       WHERE
-        requested_user=$1`,
+        requested_user=$1
+      AND 
+        is_removed=false`,
       [username]
     );
 
     const receivedRequestList = receivedRequests.rows;
 
     return { sentRequestList, receivedRequestList, removedRequestList };
+  }
+
+  static async removeRequest(id) {
+    const requestedUserRes = await db.query(
+      `UPDATE 
+        direct_conversation_requests 
+      SET 
+        is_removed=true 
+      WHERE 
+        id=$1 
+      RETURNING 
+        requested_user AS "requestedUser"`,
+      [id]
+    );
+
+    const requestedUser = requestedUserRes.rows[0];
+
+    const unansweredRequestsRes = await db.query(
+      `UPDATE 
+        users 
+      SET
+        unanswered_requests = unanswered_requests - 1
+      WHERE
+        username=$1
+      RETURNING
+        unanswered_requests AS "unansweredRequests"`,
+      [requestedUser.requestedUser]
+    );
+
+    const unansweredRequests = unansweredRequestsRes.rows[0];
+
+    return { unansweredRequests };
+  }
+
+  static async resendRequest(id) {
+    const resentRequestRes = await db.query(
+      `UPDATE 
+        direct_conversation_requests 
+      SET 
+        is_removed=false
+      WHERE 
+        id=$1 
+      RETURNING 
+        id,
+        requester_user AS "requesterUser",
+        requested_user AS "requestedUser",
+        content,
+        created_at AS "createdAt"`,
+      [id]
+    );
+
+    const resentRequest = resentRequestRes.rows[0];
+
+    const unansweredRequestsRes = await db.query(
+      `UPDATE 
+        users 
+      SET
+        unanswered_requests = unanswered_requests + 1
+      WHERE
+        username=$1
+      RETURNING
+        unanswered_requests AS "unansweredRequests"`,
+      [resentRequest.requestedUser]
+    );
+
+    const unansweredRequests = unansweredRequestsRes.rows[0];
+
+    return { resentRequest, unansweredRequests };
   }
 
   static async respondToRequest(id, requested_user, accepted) {

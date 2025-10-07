@@ -41,11 +41,14 @@ io.on("connection", (socket) => {
     session.save();
   });
 
-  socket.on("remove direct request", ({ to }) => {
+  socket.on("removeDirectRequest", ({ unansweredRequests, to }) => {
     let recipientUID = users.get(to);
     if (recipientUID) {
-      io.to(recipientUID).emit("remove direct request", {
+      io.to(recipientUID).emit("removeDirectRequest", {
         from: username,
+      });
+      io.to(recipientUID).emit("updateUnansweredRequests", {
+        unansweredRequests,
       });
     }
   });
