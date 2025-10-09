@@ -56,7 +56,7 @@ function ensureCorrectUserForReponse(req, res, next) {
   try {
     if (
       !req.session.user ||
-      req.body.requested_user !== req.session.user.username
+      req.body.requestedUser !== req.session.user.username
     ) {
       throw new UnauthorizedError(
         "Cannot reponse to a request for another user!"

@@ -39,43 +39,31 @@ class DirectConversations {
     return requestCheck.rows[0];
   }
 
-  static async createNewConversation({ title, user_1, user_2 }) {
-    const doublesCheck = await db.query(
-      `SELECT 
-            id
-        FROM
-            direct_conversations
-        WHERE
-            user_1=$1 
-        AND
-            user_2=$2
-        OR
-            user_1=$2 
-        AND
-            user_2=$1`,
-      [user_1, user_2]
-    );
-
-    if (doublesCheck.rows[0]) {
-      throw new UnacceptableError("Conversation already exists");
-    }
-
+  static async createNewConversation(user_1, user_2) {
     const res = await db.query(
-      `INSERT INTO direct_conversations
-            (title,
-            user_1,
-            user_2)
-        VALUES ($1, $2, $3)
-        RETURNING
-            id,
-            title,
-            user_1 AS 'user1',
-            user_2 AS 'user2',
-            created_at AS 'createdAt'`,
-      [title, user_1, user_2]
+      `INSERT INTO 
+          direct_conversations 
+       DEFAULT VALUES
+       RETURNING
+          id,
+          title,
+          last_updated_at AS "lastUpdatedAt",
+          created_at AS "createdAt"`
     );
 
-    return res.rows[0];
+    const conversation = res.rows[0];
+
+    await db.query(
+      `INSERT INTO users_to_direct_conversations 
+      (username, 
+       direct_conversation_id)
+     VALUES
+        ($2,$1),
+        ($3,$1)`,
+      [conversation.id, user_1, user_2]
+    );
+
+    return conversation;
   }
 
   static async createNewMessage({ content, username, direct_conversation_id }) {
@@ -336,40 +324,50 @@ class DirectConversations {
     return { resentRequest, unansweredRequests };
   }
 
-  static async respondToRequest(id, requested_user, accepted) {
+  static async respondToRequest(id, requestedUser, requesterUser) {
     const userCheck = await db.query(
       `SELECT 
-            requested_user AS 'requestedUser',
-            is_accepted AS 'isAccepted',
-            is_seen AS 'isSeen'
+            id,
+            requested_user,
+            requester_user
         FROM
             direct_conversation_requests
         WHERE
-            requested_user=$1`,
-      [requested_user]
+            id=$1
+        AND
+            requested_user=$2
+        AND
+            requester_user=$3`,
+      [id, requestedUser, requesterUser]
     );
 
     if (!userCheck.rows[0]) {
       throw new NotFoundError("Request not found");
     }
 
-    const res = await db.query(
-      `UPDATE
-            direct_conversation_requests
-        SET
-            is_seen=TRUE,
-            is_accepted=${accepted ? "TRUE" : "FALSE"}
-        WHERE
-            id=$1
-        RETURNING
-            requester_user AS 'user_1',
-            requested_user AS 'user_2',
-            is_accecpted AS 'isAccepted'
-        `,
+    await db.query(
+      `DELETE FROM
+        direct_conversation_requests
+      WHERE
+        id=$1`,
       [id]
     );
 
-    return res.rows[0];
+    const unansweredRequestsRes = await db.query(
+      `UPDATE 
+        users 
+      SET
+        unanswered_requests = unanswered_requests - 1
+      WHERE
+        username=$1
+      RETURNING
+        unanswered_requests AS "unansweredRequests"`,
+      [requestedUser]
+    );
+
+    const unansweredRequests = unansweredRequestsRes.rows[0];
+
+    return { unansweredRequests };
   }
 }
 

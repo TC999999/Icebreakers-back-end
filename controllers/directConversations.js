@@ -48,24 +48,38 @@ const getDirectMessageRequests = async (req, res, next) => {
   }
 };
 
-const createNewConversation = async (req, res, next) => {
+const respondToRequest = async (req, res, next) => {
   try {
-    const { direct_request_id, requested_user, accepted } = req.body;
-    const response = await DirectConversations.respondToRequest(
-      direct_request_id,
-      requested_user,
-      accepted
+    const { id, requesterUser, requestedUser, accepted } = req.body;
+
+    const { unansweredRequests } = await DirectConversations.respondToRequest(
+      id,
+      requestedUser,
+      requesterUser
     );
 
-    if (response.isAccepted) {
-      const conversation = await DirectConversations.createNewConversation({
-        title,
-        user_1: response.user_1,
-        user_2: response.user_2,
+    req.session.user.unansweredRequests = unansweredRequests.unansweredRequests;
+
+    if (accepted) {
+      const conversation = await DirectConversations.createNewConversation(
+        requestedUser,
+        requesterUser
+      );
+      return res.status(201).send({
+        requestResponse: {
+          conversation,
+          requestID: id,
+          unansweredRequests: unansweredRequests.unansweredRequests,
+        },
       });
-      return res.status(201).send({ conversation });
     } else {
-      return res.status(201).send({ message: "Request not accepted" });
+      return res.status(201).send({
+        requestResponse: {
+          message: "Request not accepted",
+          requestID: id,
+          unansweredRequests: unansweredRequests.unansweredRequests,
+        },
+      });
     }
   } catch (err) {
     return next(err);
@@ -100,7 +114,7 @@ const getConversationMessages = async (req, res, next) => {
 };
 
 module.exports = {
-  createNewConversation,
+  respondToRequest,
   createNewMessage,
   removeRequest,
   resendRequest,

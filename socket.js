@@ -53,14 +53,14 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("direct response", ({ response, to }) => {
+  socket.on("directResponse", ({ response, to }) => {
     let recipientUID = users.get(to);
     if (recipientUID) {
-      io.to(recipientUID).emit("direct response", {
+      io.to(recipientUID).emit("directResponse", {
         response,
         from: username,
-        to: to,
       });
+      io.to(recipientUID).emit("removeSentRequest", { id: response.requestID });
     }
   });
 

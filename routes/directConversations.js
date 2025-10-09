@@ -1,6 +1,6 @@
 const express = require("express");
 const {
-  createNewConversation,
+  respondToRequest,
   createNewMessage,
   getConversationMessages,
   makeRequest,
@@ -27,7 +27,7 @@ router.patch("/request/remove/:id", removeRequest);
 
 router.patch("/request/resend/:id", checkRequestAuth, resendRequest);
 
-router.post("/response", ensureCorrectUserForReponse, createNewConversation);
+router.post("/response", ensureCorrectUserForReponse, respondToRequest);
 
 router.post(
   "/:direct_conversation_id/newMessage",
