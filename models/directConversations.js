@@ -66,29 +66,8 @@ class DirectConversations {
     return conversation;
   }
 
-  static async createNewMessage({ content, username, direct_conversation_id }) {
-    const userCheck = await db.query(
-      `SELECT
-            user_1,
-            user_2
-        FROM
-            direct_conversations
-        WHERE
-            id=$1
-        AND
-            user_1=$2
-        OR
-            user_2=$2`,
-      [direct_conversation_id, username]
-    );
-
-    if (!userCheck.rows[0]) {
-      throw new UnacceptableError(
-        "Cannot create messages for a conversation you are not a part of"
-      );
-    }
-
-    const res = await db.query(
+  static async createNewMessage(content, username, id) {
+    const messageRes = await db.query(
       `INSERT INTO direct_conversations_messages
             (content,
             username,
@@ -98,44 +77,59 @@ class DirectConversations {
             id,
             content,
             username,
-            created_at AS 'createdAt'`,
-      [content, username, direct_conversation_id]
+            created_at AS "createdAt"`,
+      [content, username, id]
     );
 
-    return res.rows[0];
+    const message = messageRes.rows[0];
+
+    const otherUserRes = await db.query(
+      `SELECT
+        username
+      FROM
+        users_to_direct_conversations
+      WHERE
+        direct_conversation_id=$1
+      AND
+        username!=$2`,
+      [id, username]
+    );
+
+    const otherUser = otherUserRes.rows[0];
+
+    return { message, otherUser };
   }
 
-  static async getMessages(direct_conversation_id, username) {
-    const userCheck = await db.query(
-      `SELECT
-            user_1,
-            user_2
-        FROM
-            direct_conversations
-        WHERE
-            id=$1
-        AND
-            user_1=$2
-        OR
-            user_2=$2`,
-      [direct_conversation_id, username]
+  static async getAllConversations(username) {
+    const res = await db.query(
+      `SELECT 
+        direct_conversations.id,
+        title,
+        last_updated_at AS "lastUpdatedAt"
+      FROM
+        direct_conversations
+      JOIN
+        users_to_direct_conversations
+      ON
+        username=$1`,
+      [username]
     );
 
-    if (!userCheck.rows[0]) {
-      throw new UnacceptableError("Cannot view another user's messages");
-    }
+    return res.rows;
+  }
 
+  static async getMessages(id) {
     const res = await db.query(
       `SELECT
             id,
             content,
             username,
-            created_as AS 'createdAt'
+            created_at AS "createdAt"
         FROM
             direct_conversations_messages
         WHERE
             direct_conversation_id=$1`,
-      [direct_conversation_id]
+      [id]
     );
 
     return res.rows;

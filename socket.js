@@ -64,13 +64,12 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("direct message", ({ message, to }) => {
+  socket.on("directMessage", ({ message, id, to }) => {
     let recipientUID = users.get(to);
     if (recipientUID) {
-      io.to(recipientUID).emit("direct message", {
+      io.to(recipientUID).emit("directMessage", {
         message,
-        from: username,
-        to: to,
+        id,
       });
     }
   });

@@ -2,6 +2,7 @@ const express = require("express");
 const {
   respondToRequest,
   createNewMessage,
+  getAllConversations,
   getConversationMessages,
   makeRequest,
   removeRequest,
@@ -29,15 +30,17 @@ router.patch("/request/resend/:id", checkRequestAuth, resendRequest);
 
 router.post("/response", ensureCorrectUserForReponse, respondToRequest);
 
+router.get("/conversations/:username", ensureCorrectUser, getAllConversations);
+
 router.post(
-  "/:direct_conversation_id/newMessage",
-  ensureLoggedIn,
+  "/:username/conversation/:id/message",
+  ensureCorrectUser,
   createNewMessage
 );
 
 router.get(
-  "/:direct_conversation_id/messages",
-  ensureLoggedIn,
+  "/:username/conversation/:id/messages",
+  ensureCorrectUser,
   getConversationMessages
 );
 

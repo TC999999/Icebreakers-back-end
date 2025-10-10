@@ -39,8 +39,8 @@ CREATE TABLE users(
 CREATE TABLE reports(
     id SERIAL PRIMARY KEY,
     content TEXT NOT NULL,
-    reporter_user VARCHAR(30) NOT NULL REFERENCES users,
-    reported_user VARCHAR(30) NOT NULL REFERENCES users,
+    reporter_user VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
+    reported_user VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
     checked BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -52,8 +52,8 @@ CREATE TABLE interests(
 
 CREATE TABLE interests_to_users(
     id SERIAL PRIMARY KEY,
-    topic_id INTEGER NOT NULL REFERENCES interests,
-    username VARCHAR(30) NOT NULL REFERENCES users
+    topic_id INTEGER NOT NULL REFERENCES interests ON DELETE CASCADE,
+    username VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE
 );
 
 CREATE TABLE direct_conversations(
@@ -65,28 +65,28 @@ CREATE TABLE direct_conversations(
 
 CREATE TABLE users_to_direct_conversations(
     id SERIAL PRIMARY KEY,
-    username VARCHAR(30) NOT NULL REFERENCES users,
-    direct_conversation_id INTEGER NOT NULL REFERENCES direct_conversations
+    username VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
+    direct_conversation_id INTEGER NOT NULL REFERENCES direct_conversations ON DELETE CASCADE
 );
 
 CREATE TABLE direct_conversations_messages(
     id SERIAL PRIMARY KEY,
     content TEXT NOT NULL,
-    username VARCHAR(30) NOT NULL REFERENCES users,
-    direct_conversation_id INTEGER NOT NULL REFERENCES direct_conversations,
+    username VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
+    direct_conversation_id INTEGER NOT NULL REFERENCES direct_conversations ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE blocker_user_to_blocked_user(
     id SERIAL PRIMARY KEY,
-    blocker_user VARCHAR(30) NOT NULL REFERENCES users,
-    blocked_user VARCHAR(30) NOT NULL REFERENCES users
+    blocker_user VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
+    blocked_user VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE
 );
 
 CREATE TABLE direct_conversation_requests(
     id SERIAL PRIMARY KEY,
-    requested_user VARCHAR(30) NOT NULL REFERENCES users,
-    requester_user VARCHAR(30) NOT NULL REFERENCES users,
+    requested_user VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
+    requester_user VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
     content VARCHAR(100) NOT NULL,
     is_removed BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -98,34 +98,34 @@ CREATE TABLE group_conversations(
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     CHECK (LENGTH(description) <= 400),
-    host_user VARCHAR(30) NOT NULL REFERENCES users,
+    host_user VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE group_conversations_messages(
     id SERIAL PRIMARY KEY,
     content TEXT NOT NULL,
-    username VARCHAR(30) NOT NULL REFERENCES users,
-    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations,
+    username VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
+    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE user_to_group_conversations(
     id SERIAL PRIMARY KEY,
-    username VARCHAR(30) NOT NULL REFERENCES users,
-    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations
+    username VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
+    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations ON DELETE CASCADE
 );
 
 CREATE TABLE blocked_user_to_group_conversations(
     id SERIAL PRIMARY KEY,
-    blocked_user VARCHAR(30) NOT NULL REFERENCES users,
-    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations
+    blocked_user VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
+    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations ON DELETE CASCADE
 );
 
 CREATE TABLE group_conversation_requests(
     id SERIAL PRIMARY KEY,
-    requester_user VARCHAR(30) NOT NULL REFERENCES users,
-    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations,
+    requester_user VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
+    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations ON DELETE CASCADE,
     content VARCHAR(100) NOT NULL,
     is_removed BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -134,9 +134,9 @@ CREATE TABLE group_conversation_requests(
 
 CREATE TABLE group_conversation_invitations(
     id SERIAL PRIMARY KEY,
-    inviter_user VARCHAR(30) NOT NULL REFERENCES users,
-    invited_user VARCHAR(30) NOT NULL REFERENCES users,
-    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations,
+    inviter_user VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
+    invited_user VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
+    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations ON DELETE CASCADE,
     content VARCHAR(100) NOT NULL,
     is_approved BOOLEAN NOT NULL DEFAULT FALSE,
     is_removed BOOLEAN NOT NULL DEFAULT FALSE,
@@ -146,8 +146,8 @@ CREATE TABLE group_conversation_invitations(
 
 CREATE TABLE interests_to_group_conversations(
     id SERIAL PRIMARY KEY,
-    topic_id INTEGER NOT NULL REFERENCES interests,
-    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations
+    topic_id INTEGER NOT NULL REFERENCES interests ON DELETE CASCADE,
+    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations ON DELETE CASCADE
 );
 
 INSERT INTO users ("username","password", "email_address", "biography", "favorite_color") VALUES
