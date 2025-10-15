@@ -6,6 +6,7 @@ const {
   getConversationMessages,
 } = require("../controllers/directConversations");
 const {
+  checkConversationExists,
   removeRequest,
   resendRequest,
   getDirectMessageRequests,
@@ -23,6 +24,12 @@ const router = express.Router();
 
 // router.post("/new", ensureLoggedIn, createNewConversation);
 router.post("/request", ensureCorrectUserForRequest, makeRequest);
+
+router.post(
+  "/request/check/:username/with/:username2",
+  ensureCorrectUserForRequest,
+  makeRequest
+);
 
 router.get("/request/:username", ensureCorrectUser, getDirectMessageRequests);
 

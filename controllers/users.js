@@ -1,5 +1,6 @@
 const User = require("../models/users");
 const Interests = require("../models/interests");
+const DirectRequests = require("../models/directRequests");
 
 const userCheck = async (req, res, next) => {
   try {
@@ -18,7 +19,14 @@ const getUserProfile = async (req, res, next) => {
     const currentUser = req.session.user.username;
     const userRes = await User.getUserProfile(username, currentUser);
     const userInterests = await Interests.getUserInterests(username);
-    const user = { ...userRes, interests: userInterests };
+    let conversationExists;
+    if (currentUser !== username) {
+      conversationExists = await DirectRequests.checkConversationExists(
+        currentUser,
+        username
+      );
+    }
+    const user = { ...userRes, interests: userInterests, conversationExists };
     return res.status(200).send({ user });
   } catch (err) {
     return next(err);

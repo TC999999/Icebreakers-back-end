@@ -25,6 +25,26 @@ class DirectRequests {
     }
   }
 
+  static async checkConversationExists(username1, username2) {
+    const res = await db.query(
+      `SELECT 
+        COUNT(*) AS "conversationExists"
+      FROM 
+        users_to_direct_conversations 
+      WHERE 
+        username=$1 
+      OR 
+        username=$2
+      GROUP BY 
+        direct_conversation_id 
+      HAVING 
+      COUNT(*)>=2`,
+      [username1, username2]
+    );
+
+    return res.rows[0] !== undefined;
+  }
+
   static async getRequestById(id) {
     const requestCheck = await db.query(
       `SELECT 

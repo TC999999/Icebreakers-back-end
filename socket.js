@@ -46,15 +46,20 @@ io.on("connection", (socket) => {
     session.save();
   });
 
-  socket.on("decreaseUnreadMessages", ({ id }) => {
-    session.user.unreadMessages -= 1;
+  socket.on("clearTotalUnreadMessages", ({ unreadMessages }) => {
+    session.user.unreadMessages -= unreadMessages;
     session.save();
+  });
 
+  socket.on("decreaseUnreadMessages", ({ id }) => {
     const clearUnreadMessages = async () => {
       await DirectConversations.clearUnreadMessages(id, session.user.username);
     };
 
     clearUnreadMessages();
+
+    session.user.unreadMessages -= 1;
+    session.save();
   });
 
   socket.on("removeDirectRequest", ({ unansweredRequests, to }) => {

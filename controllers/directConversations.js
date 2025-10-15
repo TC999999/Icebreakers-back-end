@@ -71,10 +71,9 @@ const getConversationMessages = async (req, res, next) => {
     const { username, id } = req.params;
     const { unreadMessages } = req.query;
     const messages = await DirectConversations.getMessages(id);
-
+    console.log("unread messages when retrieveing messages: ", unreadMessages);
     if (unreadMessages > 0) {
       await DirectConversations.clearUnreadMessages(id, username);
-      req.session.user.unreadMessages -= unreadMessages;
     }
     return res.status(200).send({ messages });
   } catch (err) {

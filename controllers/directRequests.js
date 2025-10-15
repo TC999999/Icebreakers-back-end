@@ -8,10 +8,22 @@ const makeRequest = async (req, res, next) => {
       requesterUser,
       content
     );
-
     const { unansweredRequests } =
       await DirectRequests.getUnansweredRequestCount(requestedUser);
     return res.status(201).send({ request, unansweredRequests });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+const checkConversationExists = async (req, res, next) => {
+  try {
+    const { username, username2 } = req.params;
+    const conversationExists = await DirectRequests.checkConversationExists(
+      username,
+      username2
+    );
+    return res.status(200).send({ conversationExists });
   } catch (err) {
     return next(err);
   }
@@ -54,6 +66,7 @@ const getDirectMessageRequests = async (req, res, next) => {
 };
 
 module.exports = {
+  checkConversationExists,
   removeRequest,
   resendRequest,
   getDirectMessageRequests,
