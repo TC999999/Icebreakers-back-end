@@ -37,8 +37,24 @@ io.on("connection", (socket) => {
   });
 
   socket.on("updateUnansweredRequests", ({ unansweredRequests }) => {
-    session.user.unansweredRequests = unansweredRequests.unansweredRequests;
+    session.user.unansweredRequests = unansweredRequests;
     session.save();
+  });
+
+  socket.on("increaseUnreadMessages", () => {
+    session.user.unreadMessages += 1;
+    session.save();
+  });
+
+  socket.on("decreaseUnreadMessages", ({ id }) => {
+    session.user.unreadMessages -= 1;
+    session.save();
+
+    const clearUnreadMessages = async () => {
+      await DirectConversations.clearUnreadMessages(id, session.user.username);
+    };
+
+    clearUnreadMessages();
   });
 
   socket.on("removeDirectRequest", ({ unansweredRequests, to }) => {
@@ -67,6 +83,7 @@ io.on("connection", (socket) => {
   socket.on("directMessage", ({ message, id, to }) => {
     let recipientUID = users.get(to);
     if (recipientUID) {
+      io.to(recipientUID).emit("increaseUnreadMessages");
       io.to(recipientUID).emit("directMessage", {
         message,
         id,

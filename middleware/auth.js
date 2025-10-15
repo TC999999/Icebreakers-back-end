@@ -1,5 +1,5 @@
 const { UnauthorizedError, UnacceptableError } = require("../expressError");
-const DirectConversations = require("../models/directConversations");
+const DirectRequests = require("../models/directRequests");
 
 function ensureLoggedIn(req, res, next) {
   try {
@@ -42,7 +42,7 @@ function ensureCorrectUserForRequest(req, res, next) {
 
 async function checkRequestAuth(req, res, next) {
   try {
-    let check = await DirectConversations.getRequestById(req.params.id);
+    let check = await DirectRequests.getRequestById(req.params.id);
     if (!check || check.requesterUser !== req.session.user.username) {
       throw new UnauthorizedError("Cannot change a request for another user!");
     }

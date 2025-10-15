@@ -29,8 +29,6 @@ CREATE TABLE users(
     email_address TEXT NOT NULL UNIQUE CHECK (position('@' IN email_address) > 1),
     biography VARCHAR(200),
     favorite_color VARCHAR(7) CHECK (position('#' IN favorite_color) = 1),
-    unread_messages INTEGER NOT NULL DEFAULT 0,
-    unanswered_requests INTEGER NOT NULL DEFAULT 0,
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
     is_flagged BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -66,7 +64,8 @@ CREATE TABLE direct_conversations(
 CREATE TABLE users_to_direct_conversations(
     id SERIAL PRIMARY KEY,
     username VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
-    direct_conversation_id INTEGER NOT NULL REFERENCES direct_conversations ON DELETE CASCADE
+    direct_conversation_id INTEGER NOT NULL REFERENCES direct_conversations ON DELETE CASCADE,
+    unread_messages INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE direct_conversations_messages(

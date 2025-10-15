@@ -1,7 +1,7 @@
 const db = require("../db");
 const constructSearchString = require("../helpers/constructSearchString");
 const { NotFoundError } = require("../expressError");
-const DirectConversations = require("./directConversations");
+const DirectRequests = require("./directRequests");
 
 class User {
   static async userCheck(username) {
@@ -41,10 +41,7 @@ class User {
     if (user) {
       user = {
         ...user,
-        requestSent: await DirectConversations.checkRequests(
-          username,
-          currentUser
-        ),
+        requestSent: await DirectRequests.checkRequests(username, currentUser),
       };
 
       return user;

@@ -25,9 +25,7 @@ class Authorization {
         username, 
         favorite_color AS "favoriteColor", 
         is_admin AS "isAdmin", 
-        is_flagged AS "isFlagged",
-        unanswered_requests AS "unansweredRequests",
-        unread_messages AS "unreadMessages"`,
+        is_flagged AS "isFlagged"`,
       [username, hashedPassword, emailAddress, biography, favoriteColor]
     );
 
@@ -41,9 +39,7 @@ class Authorization {
             password, 
             favorite_color AS "favoriteColor", 
             is_admin AS "isAdmin", 
-            is_flagged AS "isFlagged",
-            unanswered_requests AS "unansweredRequests",
-            unread_messages AS "unreadMessages"
+            is_flagged AS "isFlagged"
         FROM 
             users 
         WHERE 

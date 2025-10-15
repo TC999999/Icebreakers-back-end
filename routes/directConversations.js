@@ -4,11 +4,13 @@ const {
   createNewMessage,
   getAllConversations,
   getConversationMessages,
-  makeRequest,
+} = require("../controllers/directConversations");
+const {
   removeRequest,
   resendRequest,
   getDirectMessageRequests,
-} = require("../controllers/directConversations");
+  makeRequest,
+} = require("../controllers/directRequests");
 const {
   ensureLoggedIn,
   ensureCorrectUser,

@@ -1,4 +1,6 @@
 const Authorization = require("../models/auth");
+const DirectConversations = require("../models/directConversations");
+const DirectRequests = require("../models/directRequests");
 const Interests = require("../models/interests");
 
 const registerUser = async (req, res, next) => {
@@ -22,16 +24,18 @@ const registerUser = async (req, res, next) => {
     if (interests.length)
       await Interests.addInterestsForUser(username, interests);
 
-    req.session.user = {
+    let userSession = {
       username: user.username,
       favoriteColor: user.favoriteColor,
       isAdmin: user.isAdmin,
       isFlagged: user.isFlagged,
-      unansweredRequests: user.unansweredRequests,
-      unreadMessages: user.unreadMessages,
+      unansweredRequests: 0,
+      unreadMessages: 0,
     };
 
-    return res.status(201).send({ user });
+    req.session.user = userSession;
+
+    return res.status(201).send({ user: userSession });
   } catch (err) {
     return next(err);
   }
@@ -46,16 +50,24 @@ const logInUser = async (req, res, next) => {
       password,
     });
 
-    req.session.user = {
+    const { unansweredRequests } =
+      await DirectRequests.getUnansweredRequestCount(username);
+
+    const { unreadMessages } =
+      await DirectConversations.getAllUnreadMessageCount(username);
+
+    let userSession = {
       username: user.username,
       favoriteColor: user.favoriteColor,
       isAdmin: user.isAdmin,
       isFlagged: user.isFlagged,
-      unansweredRequests: user.unansweredRequests,
-      unreadMessages: user.unreadMessages,
+      unansweredRequests: parseFloat(unansweredRequests),
+      unreadMessages: parseFloat(unreadMessages) || 0,
     };
 
-    return res.status(200).send({ user });
+    req.session.user = userSession;
+
+    return res.status(200).send({ user: userSession });
   } catch (err) {
     return next(err);
   }
@@ -69,7 +81,6 @@ const getCurrentUser = async (req, res, next) => {
     } else {
       user = null;
     }
-    // console.log(user);
     return res.status(200).send({ user });
   } catch (err) {
     return next(err);
