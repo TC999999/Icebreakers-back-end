@@ -45,6 +45,16 @@ class DirectConversations {
 
     const message = messageRes.rows[0];
 
+    await db.query(
+      `UPDATE 
+        direct_conversations 
+      SET 
+        last_updated_at=$1 
+      WHERE 
+        id=$2`,
+      [message.createdAt, id]
+    );
+
     const otherUserRes = await db.query(
       `SELECT
         username
