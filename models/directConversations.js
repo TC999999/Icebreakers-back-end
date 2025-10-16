@@ -136,6 +136,23 @@ class DirectConversations {
     return res.rows;
   }
 
+  static async getOtherConversationUser(id, username) {
+    const res = await db.query(
+      `SELECT 
+        username AS "recipient", 
+        direct_conversation_id AS "id" 
+      FROM 
+        users_to_direct_conversations 
+      WHERE 
+        username!=$1 
+      AND 
+        direct_conversation_id=$2`,
+      [username, id]
+    );
+
+    return res.rows[0];
+  }
+
   static async getAllUnreadMessageCount(username) {
     const res = await db.query(
       `SELECT 

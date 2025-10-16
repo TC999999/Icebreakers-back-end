@@ -62,6 +62,25 @@ io.on("connection", (socket) => {
     session.save();
   });
 
+  socket.on("isTyping", ({ otherUser, id, to }) => {
+    let recipientUID = users.get(to);
+    if (recipientUID) {
+      io.to(recipientUID).emit("isTyping", {
+        otherUser,
+        id,
+      });
+    }
+  });
+
+  socket.on("isNotTyping", ({ id, to }) => {
+    let recipientUID = users.get(to);
+    if (recipientUID) {
+      io.to(recipientUID).emit("isNotTyping", {
+        id,
+      });
+    }
+  });
+
   socket.on("removeDirectRequest", ({ unansweredRequests, to }) => {
     let recipientUID = users.get(to);
     if (recipientUID) {
