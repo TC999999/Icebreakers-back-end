@@ -84,9 +84,25 @@ const getConversationMessages = async (req, res, next) => {
   }
 };
 
+const editConversation = async (req, res, next) => {
+  try {
+    const { username, id } = req.params;
+    const { title } = req.body;
+    const updatedConversation = await DirectConversations.editConversation(
+      username,
+      id,
+      title
+    );
+    return res.status(200).send({ updatedConversation });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 module.exports = {
   respondToRequest,
   createNewMessage,
   getAllConversations,
   getConversationMessages,
+  editConversation,
 };

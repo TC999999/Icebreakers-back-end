@@ -4,6 +4,7 @@ const {
   createNewMessage,
   getAllConversations,
   getConversationMessages,
+  editConversation,
 } = require("../controllers/directConversations");
 const {
   checkConversationExists,
@@ -22,7 +23,6 @@ const {
 
 const router = express.Router();
 
-// router.post("/new", ensureLoggedIn, createNewConversation);
 router.post("/request", ensureCorrectUserForRequest, makeRequest);
 
 router.post(
@@ -51,6 +51,12 @@ router.get(
   "/:username/conversation/:id/messages",
   ensureCorrectUser,
   getConversationMessages
+);
+
+router.patch(
+  "/:username/conversation/:id",
+  ensureCorrectUser,
+  editConversation
 );
 
 module.exports = router;

@@ -1,4 +1,5 @@
 const db = require("../db");
+const { UnauthorizedError } = require("../expressError");
 
 class DirectConversations {
   static async createNewConversation(user_1, user_2) {
@@ -150,9 +151,14 @@ class DirectConversations {
     const res = await db.query(
       `SELECT 
         username AS "recipient", 
-        direct_conversation_id AS "id" 
+        direct_conversations.id AS "id",
+        title 
       FROM 
         users_to_direct_conversations 
+      JOIN
+        direct_conversations
+      ON
+        users_to_direct_conversations.direct_conversation_id=direct_conversations.id
       WHERE 
         username!=$1 
       AND 
@@ -172,6 +178,45 @@ class DirectConversations {
       WHERE 
         username=$1`,
       [username]
+    );
+
+    return res.rows[0];
+  }
+
+  static async editConversation(username, id, title) {
+    const conversationCheck = await db.query(
+      `SELECT
+        username,
+        direct_conversation_id
+      FROM
+        users_to_direct_conversations
+      WHERE
+        username=$1
+      AND
+        direct_conversation_id=$2
+      `,
+      [username, id]
+    );
+
+    if (!conversationCheck.rows[0]) {
+      throw new UnauthorizedError(
+        "Cannot edit conversation that you are not a part of!"
+      );
+    }
+
+    const res = await db.query(
+      `UPDATE
+        direct_conversations
+      SET
+        title=$1,
+        last_updated_at=CURRENT_TIMESTAMP
+      WHERE
+        id=$2
+      RETURNING
+        id,
+        title,
+        last_updated_at AS "lastUpdatedAt"`,
+      [title, id]
     );
 
     return res.rows[0];
