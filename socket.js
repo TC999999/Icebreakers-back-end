@@ -115,6 +115,15 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("editConversation", ({ conversation, to }) => {
+    let recipientUID = users.get(to);
+    if (recipientUID) {
+      io.to(recipientUID).emit("editConversation", {
+        conversation,
+      });
+    }
+  });
+
   socket.on("disconnect", () => {
     users.delete(username);
     console.log(
