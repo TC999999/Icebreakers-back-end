@@ -56,7 +56,7 @@ CREATE TABLE interests_to_users(
 
 CREATE TABLE direct_conversations(
     id SERIAL PRIMARY KEY,
-    title TEXT NOT NULL DEFAULT 'New Conversation',
+    title TEXT NOT NULL DEFAULT '',
     last_updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

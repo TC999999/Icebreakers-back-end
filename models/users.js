@@ -2,6 +2,7 @@ const db = require("../db");
 const constructSearchString = require("../helpers/constructSearchString");
 const { NotFoundError } = require("../expressError");
 const DirectRequests = require("./directRequests");
+const { insertMultipleSQL } = require("../helpers/insertMultipleSQL");
 
 class User {
   static async userCheck(username) {
@@ -86,7 +87,8 @@ class User {
 
   static async getAllUsers(username) {
     const users = await db.query(
-      `SELECT 
+      `
+      SELECT 
         users.username 
       FROM 
         users 
@@ -103,7 +105,8 @@ class User {
   static async getSingleUserInterests(username, findSimilarInterests) {
     if (findSimilarInterests) {
       const res = await db.query(
-        `SELECT 
+        `
+      SELECT 
         JSON_AGG(interests.topic) 
       AS 
         interests 
@@ -131,7 +134,8 @@ class User {
     const { filterString, values } = constructSearchString(username, interests);
 
     const users = await db.query(
-      `SELECT 
+      `
+      SELECT 
         users.username, 
         users.favorite_color AS favoriteColor,
         JSON_AGG(interests.topic) AS interests 
@@ -157,6 +161,85 @@ class User {
     );
 
     return users.rows;
+  }
+
+  static async getUserForEdit(username) {
+    const res = await db.query(
+      `
+      SELECT 
+        u.username, 
+        email_address AS "emailAddress", 
+        biography, 
+        favorite_color AS "favoriteColor", 
+        JSONB_OBJECT_AGG(
+          i.id, JSONB_BUILD_OBJECT(
+            'id', i.id, 
+            'topic', i.topic
+          )
+        ) AS "interests" 
+      FROM 
+        users AS u 
+      JOIN 
+        interests_to_users AS iu 
+      ON 
+        u.username=iu.username 
+      JOIN 
+        interests AS i 
+      ON 
+        iu.topic_id=i.id 
+      WHERE 
+        u.username=$1 
+      GROUP BY 
+        u.username`,
+      [username]
+    );
+
+    return res.rows[0];
+  }
+
+  static async editUser({
+    username,
+    emailAddress,
+    biography,
+    favoriteColor,
+    interests,
+  }) {
+    let updateRes = await db.query(
+      `
+      UPDATE 
+        users 
+      SET 
+        email_address=$1, 
+        biography=$2, 
+        favorite_color=$3
+      WHERE
+        username=$4
+      RETURNING
+        favorite_color AS "newFavoriteColor"`,
+      [emailAddress, biography, favoriteColor, username]
+    );
+
+    await db.query(
+      `
+      DELETE FROM
+        interests_to_users
+      WHERE
+        username=$1`,
+      [username]
+    );
+
+    let interestsArr = Object.values(interests).map((i) => {
+      return i.id;
+    });
+
+    await db.query(
+      `INSERT INTO interests_to_users (topic_id, username) VALUES ${insertMultipleSQL(
+        username,
+        interestsArr
+      )}`
+    );
+
+    return updateRes.rows[0];
   }
 }
 

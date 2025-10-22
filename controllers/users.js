@@ -60,4 +60,39 @@ const searchForUsers = async (req, res, next) => {
   }
 };
 
-module.exports = { userCheck, getUserProfile, getAllUsers, searchForUsers };
+const getUserForEdit = async (req, res, next) => {
+  try {
+    const { username } = req.params;
+    const user = await User.getUserForEdit(username);
+    const interests = await Interests.getInterestsForEdit();
+    return res.status(200).send({ user, interests });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+const editUser = async (req, res, next) => {
+  try {
+    const { username, emailAddress, biography, favoriteColor, interests } =
+      req.body;
+    const { newFavoriteColor } = await User.editUser({
+      username,
+      emailAddress,
+      biography,
+      favoriteColor,
+      interests,
+    });
+    return res.status(200).send({ newFavoriteColor });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+module.exports = {
+  userCheck,
+  getUserProfile,
+  getAllUsers,
+  searchForUsers,
+  getUserForEdit,
+  editUser,
+};

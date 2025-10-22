@@ -7,6 +7,22 @@ class Interests {
     return res.rows;
   }
 
+  static async getInterestsForEdit() {
+    const res = await db.query(
+      `SELECT 
+        JSONB_OBJECT_AGG(
+          i.id, JSONB_BUILD_OBJECT(
+            'id', i.id,
+            'topic', i.topic
+          )
+          ) AS "interests" 
+      FROM 
+        interests AS i`
+    );
+
+    return res.rows[0].interests;
+  }
+
   static async addInterestsForUser(username, interests) {
     let values = insertMultipleSQL(username, interests);
 

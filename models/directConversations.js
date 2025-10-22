@@ -76,17 +76,41 @@ class DirectConversations {
   static async getAllConversations(username) {
     const res = await db.query(
       `SELECT 
-        direct_conversations.id,
-        title,
-        last_updated_at AS "lastUpdatedAt",
-        users_to_direct_conversations.unread_messages AS "unreadMessages"
-      FROM
-        direct_conversations
-      JOIN
-        users_to_direct_conversations
-      ON
-        direct_conversations.id=users_to_direct_conversations.direct_conversation_id
-      WHERE
+        dc.id, 
+        dc.title, 
+        dc.last_updated_at AS "lastUpdatedAt", 
+        ou.other_user AS "otherUser", 
+        udc.unread_messages AS "unreadMessages" 
+      FROM 
+        direct_conversations AS dc 
+      JOIN 
+        users_to_direct_conversations AS udc 
+      ON 
+        dc.id=udc.direct_conversation_id 
+      JOIN 
+        (SELECT 
+          dc.id, 
+          udc.username AS "other_user" 
+        FROM 
+          direct_conversations AS dc 
+        JOIN 
+          users_to_direct_conversations AS udc 
+        ON 
+          dc.id=udc.direct_conversation_id 
+        WHERE 
+          dc.id 
+        IN 
+          (SELECT 
+            udc2.direct_conversation_id 
+          FROM 
+            users_to_direct_conversations AS udc2 
+          WHERE 
+            username=$1) 
+        AND 
+          username!=$1) AS ou 
+      ON 
+        ou.id=dc.id 
+      WHERE 
         username=$1`,
       [username]
     );
