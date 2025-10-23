@@ -9,4 +9,13 @@ const getInitialInterests = async (req, res, next) => {
   }
 };
 
-module.exports = { getInitialInterests };
+const getInterestsAsMap = async (req, res, next) => {
+  try {
+    const interests = await Interests.getInterestsAsMap();
+    return res.status(200).send({ interests });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+module.exports = { getInitialInterests, getInterestsAsMap };

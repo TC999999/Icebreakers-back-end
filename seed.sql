@@ -112,7 +112,8 @@ CREATE TABLE group_conversations_messages(
 CREATE TABLE user_to_group_conversations(
     id SERIAL PRIMARY KEY,
     username VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
-    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations ON DELETE CASCADE
+    group_conversation_id INTEGER NOT NULL REFERENCES group_conversations ON DELETE CASCADE, 
+    unread_messages INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE blocked_user_to_group_conversations(

@@ -64,7 +64,7 @@ const getUserForEdit = async (req, res, next) => {
   try {
     const { username } = req.params;
     const user = await User.getUserForEdit(username);
-    const interests = await Interests.getInterestsForEdit();
+    const interests = await Interests.getInterestsAsMap();
     return res.status(200).send({ user, interests });
   } catch (err) {
     return next(err);

@@ -7,7 +7,7 @@ class Interests {
     return res.rows;
   }
 
-  static async getInterestsForEdit() {
+  static async getInterestsAsMap() {
     const res = await db.query(
       `SELECT 
         JSONB_OBJECT_AGG(
