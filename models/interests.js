@@ -31,6 +31,18 @@ class Interests {
     );
   }
 
+  static async addInterestsForGroup(id, interests) {
+    let interestsArr = Object.values(interests).map((i) => {
+      return i.id;
+    });
+
+    let values = insertMultipleSQL(id, interestsArr);
+
+    await db.query(
+      `INSERT INTO interests_to_group_conversations (topic_id, group_conversation_id) VALUES ${values}`
+    );
+  }
+
   static async getUserInterests(username) {
     let res = await db.query(
       `SELECT 

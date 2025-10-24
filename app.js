@@ -6,6 +6,7 @@ const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");
 const interestsRoutes = require("./routes/interests");
 const directMessagesRoutes = require("./routes/directConversations");
+const groupMessagesRoutes = require("./routes/groupConversations");
 const { sessionMiddleware, corsMiddleware } = require("./serverConfig");
 const app = express();
 
@@ -22,6 +23,7 @@ app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/interests", interestsRoutes);
 app.use("/directMessage", directMessagesRoutes);
+app.use("/groupMessage", groupMessagesRoutes);
 
 // 404 Error Handler
 app.use(function (req, res, next) {
