@@ -2,6 +2,7 @@ const express = require("express");
 const {
   createNewConversation,
   getAllGroups,
+  getGroup,
 } = require("../controllers/groupConversations");
 
 const {
@@ -17,5 +18,7 @@ const router = express.Router();
 router.post("/new", ensureLoggedIn, createNewConversation);
 
 router.get("/:username", ensureCorrectUser, getAllGroups);
+
+router.get("/id/:id", ensureLoggedIn, getGroup);
 
 module.exports = router;

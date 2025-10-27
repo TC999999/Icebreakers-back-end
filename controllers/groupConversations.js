@@ -36,6 +36,20 @@ const getAllGroups = async (req, res, next) => {
   }
 };
 
+const getGroup = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const isInGroup = await GroupConversations.checkGroup(
+      req.session.user.username,
+      id
+    );
+    const group = await GroupConversations.getGroupInfo(id);
+    return res.status(201).send({ group, isInGroup });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 const createNewMessage = async (req, res, next) => {
   try {
     const { content, username, group_conversation_id } = req.body;
@@ -50,4 +64,9 @@ const createNewMessage = async (req, res, next) => {
   }
 };
 
-module.exports = { createNewConversation, getAllGroups, createNewMessage };
+module.exports = {
+  createNewConversation,
+  getAllGroups,
+  createNewMessage,
+  getGroup,
+};

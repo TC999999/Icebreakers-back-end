@@ -47,8 +47,12 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("updateUnansweredRequests", ({ unansweredRequests }) => {
-    console.log(unansweredRequests);
     session.user.unansweredRequests = unansweredRequests;
+    session.save();
+  });
+
+  socket.on("updateFavoriteColor", ({ favoriteColor }) => {
+    session.user.favoriteColor = favoriteColor;
     session.save();
   });
 
@@ -64,7 +68,6 @@ io.on("connection", async (socket) => {
 
   socket.on("decreaseUnreadMessages", async ({ id }) => {
     await DirectConversations.clearUnreadMessages(id, session.user.username);
-
     session.user.unreadMessages -= 1;
     session.save();
   });

@@ -1,7 +1,45 @@
 const db = require("../db");
+const { UnauthorizedError } = require("../expressError");
 const { insertMultipleUsers } = require("../helpers/insertMultipleSQL");
 
 class GroupConversations {
+  static async checkGroupError(username, id) {
+    const res = await db.query(
+      `SELECT 
+        username 
+      FROM 
+        user_to_group_conversations 
+      WHERE 
+        username=$1 
+      AND 
+        group_conversation_id=$2`,
+      [username, id]
+    );
+
+    if (!res.rows[0]) {
+      throw new UnauthorizedError("NOT a part of this group!");
+    }
+  }
+
+  static async checkGroup(username, id) {
+    const res = await db.query(
+      `SELECT 
+        username 
+      FROM 
+        user_to_group_conversations 
+      WHERE 
+        username=$1 
+      AND 
+        group_conversation_id=$2`,
+      [username, id]
+    );
+
+    if (!res.rows[0]) {
+      return false;
+    }
+    return true;
+  }
+
   static async addNewUser(username, group_conversation_id) {
     await db.query(
       `INSERT INTO user_to_group_conversations
@@ -93,6 +131,61 @@ class GroupConversations {
     const nonHostedGroups = nonHostedGroupsRes.rows;
 
     return { hostedGroups, nonHostedGroups };
+  }
+
+  static async getGroupInfo(id) {
+    const res = await db.query(
+      `SELECT 
+        gc.id, 
+        gc.title, 
+        gc.description,
+        gc.host_user AS "host", 
+        gc.created_at AS "createdAt", 
+        u.users, 
+        i.interests 
+      FROM 
+        group_conversations AS gc 
+      JOIN 
+        (SELECT 
+          ugc.group_conversation_id AS gcID, 
+          JSONB_AGG(
+            JSONB_BUILD_OBJECT(
+              'username', u.username, 
+              'favoriteColor', u.favorite_color
+            )
+          ) AS users 
+        FROM 
+          user_to_group_conversations AS ugc 
+        JOIN 
+          users AS u 
+        ON 
+          u.username=ugc.username 
+        GROUP BY 
+          ugc.group_conversation_id
+        ) AS u 
+      ON 
+        u.gcid=gc.id 
+      JOIN 
+        (SELECT 
+          igc.group_conversation_id AS gcid, 
+          JSONB_AGG(i.topic) AS interests 
+        FROM 
+          interests_to_group_conversations AS igc 
+        JOIN 
+          interests AS i 
+        ON 
+          i.id=igc.topic_id 
+        GROUP BY 
+          igc.group_conversation_id
+        ) AS i 
+      ON 
+        i.gcid=gc.id 
+      WHERE 
+        gc.id=$1`,
+      [id]
+    );
+
+    return res.rows[0];
   }
 
   static async createNewMessage(content, username, group_conversation_id) {
