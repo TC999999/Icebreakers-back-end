@@ -1,8 +1,5 @@
 const db = require("../db");
-const {
-  insertMultipleUsers,
-  insertMultipleSQL,
-} = require("../helpers/insertMultipleSQL");
+const { insertMultipleUsers } = require("../helpers/insertMultipleSQL");
 
 class GroupConversations {
   static async addNewUser(username, group_conversation_id) {
@@ -40,6 +37,23 @@ class GroupConversations {
     );
 
     return res.rows[0];
+  }
+
+  static async getAllGroupsSocket(username) {
+    const res = await db.query(
+      `
+      SELECT 
+        JSON_AGG(ugc.group_conversation_id) AS groups 
+      FROM 
+        user_to_group_conversations AS ugc 
+      WHERE 
+        username=$1 
+      GROUP BY 
+        ugc.group_conversation_id`,
+      [username]
+    );
+
+    return res.rows[0] ? res.rows[0].groups : [];
   }
 
   static async getAllGroups(username) {

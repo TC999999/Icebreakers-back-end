@@ -10,8 +10,7 @@ class DirectConversations {
        RETURNING
           id,
           title,
-          last_updated_at AS "lastUpdatedAt",
-          created_at AS "createdAt"`
+          last_updated_at AS "lastUpdatedAt"`
     );
 
     const conversation = res.rows[0];

@@ -10,8 +10,6 @@ const respondToRequest = async (req, res, next) => {
     const { unansweredRequests } =
       await DirectRequests.getUnansweredRequestCount(requestedUser);
 
-    req.session.user.unansweredRequests = unansweredRequests;
-
     if (accepted) {
       const conversation = await DirectConversations.createNewConversation(
         requestedUser,

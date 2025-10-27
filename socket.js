@@ -3,6 +3,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const { sessionMiddleware, corsOptions } = require("./serverConfig");
 const DirectConversations = require("./models/directConversations");
+const GroupConversations = require("./models/groupConversations");
 
 const server = http.createServer(app);
 
@@ -17,12 +18,21 @@ const users = new Map();
 io.engine.use(sessionMiddleware);
 
 // socket.io connection and session access
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
   const session = socket.request.session;
   const username = session.user.username;
 
+  // sets username in user map above for sending and receiving private messages
   users.set(username, socket.id);
   console.log("*****User " + username + " Connected*****");
+
+  // joins/creates rooms for sending and receiving group messages
+  const groups = await GroupConversations.getAllGroupsSocket(username);
+  socket.join(
+    groups.map((id) => {
+      return "group:" + id;
+    })
+  );
 
   socket.on("addToDirectRequestList", ({ request, unansweredRequests, to }) => {
     let recipientUID = users.get(to);
@@ -37,6 +47,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("updateUnansweredRequests", ({ unansweredRequests }) => {
+    console.log(unansweredRequests);
     session.user.unansweredRequests = unansweredRequests;
     session.save();
   });
@@ -51,32 +62,20 @@ io.on("connection", (socket) => {
     session.save();
   });
 
-  socket.on("decreaseUnreadMessages", ({ id }) => {
-    const clearUnreadMessages = async () => {
-      await DirectConversations.clearUnreadMessages(id, session.user.username);
-    };
-
-    clearUnreadMessages();
+  socket.on("decreaseUnreadMessages", async ({ id }) => {
+    await DirectConversations.clearUnreadMessages(id, session.user.username);
 
     session.user.unreadMessages -= 1;
     session.save();
   });
 
-  socket.on("isTyping", ({ otherUser, id, to }) => {
+  socket.on("isTyping", ({ otherUser, id, to, isTyping }) => {
     let recipientUID = users.get(to);
     if (recipientUID) {
       io.to(recipientUID).emit("isTyping", {
         otherUser,
         id,
-      });
-    }
-  });
-
-  socket.on("isNotTyping", ({ id, to }) => {
-    let recipientUID = users.get(to);
-    if (recipientUID) {
-      io.to(recipientUID).emit("isNotTyping", {
-        id,
+        isTyping,
       });
     }
   });
@@ -93,13 +92,18 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("addConversation", ({ conversation, to }) => {
+    let recipientUID = users.get(to);
+    if (recipientUID) {
+      io.to(recipientUID).emit("addConversation", {
+        conversation,
+      });
+    }
+  });
+
   socket.on("directResponse", ({ response, to }) => {
     let recipientUID = users.get(to);
     if (recipientUID) {
-      io.to(recipientUID).emit("directResponse", {
-        response,
-        from: username,
-      });
       io.to(recipientUID).emit("removeSentRequest", { id: response.requestID });
     }
   });
@@ -122,6 +126,10 @@ io.on("connection", (socket) => {
         conversation,
       });
     }
+  });
+
+  socket.on("joinGroup", ({ group }) => {
+    socket.join("group:" + group.id);
   });
 
   socket.on("disconnect", () => {

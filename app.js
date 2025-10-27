@@ -1,6 +1,5 @@
 const express = require("express");
 const morgan = require("morgan");
-// const cookieParser = require("cookie-parser");
 const { NotFoundError } = require("./expressError");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");

@@ -44,11 +44,9 @@ const removeRequest = async (req, res, next) => {
 const resendRequest = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const resentRequest = await DirectRequests.resendRequest(id);
+    const { requestedUser } = await DirectRequests.resendRequest(id);
     const { unansweredRequests } =
-      await DirectRequests.getUnansweredRequestCount(
-        resentRequest.requestedUser
-      );
+      await DirectRequests.getUnansweredRequestCount(requestedUser);
     return res.status(200).send({ resentRequest, unansweredRequests });
   } catch (err) {
     return next(err);
