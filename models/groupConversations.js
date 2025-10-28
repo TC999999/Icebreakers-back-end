@@ -133,6 +133,24 @@ class GroupConversations {
     return { hostedGroups, nonHostedGroups };
   }
 
+  static async getAllGroupsSingleList(username) {
+    const res = await db.query(
+      `SELECT 
+        gc.id, 
+        gc.title 
+      FROM 
+        group_conversations AS gc 
+      JOIN 
+        user_to_group_conversations AS ugc 
+      ON 
+        gc.id=ugc.group_conversation_id 
+      WHERE 
+        username=$1;`,
+      [username]
+    );
+    return res.rows;
+  }
+
   static async getGroupInfo(id) {
     const res = await db.query(
       `SELECT 

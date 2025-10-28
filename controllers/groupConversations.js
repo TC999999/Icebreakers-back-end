@@ -29,8 +29,16 @@ const createNewConversation = async (req, res, next) => {
 const getAllGroups = async (req, res, next) => {
   try {
     const { username } = req.params;
-    const groups = await GroupConversations.getAllGroups(username);
-    return res.status(201).send({ groups });
+    const { getSingle } = req.query;
+    let groups;
+
+    if (getSingle) {
+      groups = await GroupConversations.getAllGroupsSingleList(username);
+    } else {
+      groups = await GroupConversations.getAllGroups(username);
+    }
+
+    return res.status(200).send({ groups });
   } catch (err) {
     return next(err);
   }
@@ -44,7 +52,7 @@ const getGroup = async (req, res, next) => {
       id
     );
     const group = await GroupConversations.getGroupInfo(id);
-    return res.status(201).send({ group, isInGroup });
+    return res.status(200).send({ group, isInGroup });
   } catch (err) {
     return next(err);
   }
