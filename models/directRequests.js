@@ -59,8 +59,8 @@ class DirectRequests {
     return requestCheck.rows[0];
   }
 
-  static async makeRequest(requestedUser, requesterUser, content) {
-    if (requestedUser === requesterUser) {
+  static async makeRequest(to, from, content) {
+    if (to === from) {
       throw new UnacceptableError("Cannot make conversation with yourself");
     }
 
@@ -78,7 +78,7 @@ class DirectRequests {
             requested_user=$2 
         AND
             requester_user=$1`,
-      [requestedUser, requesterUser]
+      [to, from]
     );
 
     if (doublesCheck.rows[0]) {
@@ -93,11 +93,11 @@ class DirectRequests {
         VALUES ($1, $2, $3)
         RETURNING
             id,
-            requested_user AS "requestedUser",
-            requester_user AS "requesterUser",
+            requested_user AS "to",
+            requester_user AS "from",
             content,
             created_at AS "createdAt"`,
-      [requestedUser, requesterUser, content]
+      [to, from, content]
     );
 
     return res.rows[0];
@@ -174,43 +174,27 @@ class DirectRequests {
     return { sentRequestList, receivedRequestList, removedRequestList };
   }
 
-  static async removeRequest(id) {
+  static async removeRequest(remove, id) {
     const res = await db.query(
       `UPDATE 
             direct_conversation_requests 
         SET 
-            is_removed=true 
+            is_removed=$1 
         WHERE 
-            id=$1 
-        RETURNING 
-            requested_user AS "requestedUser"`,
-      [id]
-    );
-
-    return res.rows[0];
-  }
-
-  static async resendRequest(id) {
-    const res = await db.query(
-      `UPDATE 
-            direct_conversation_requests 
-        SET 
-            is_removed=false
-        WHERE 
-            id=$1 
+            id=$2 
         RETURNING 
             id,
-            requester_user AS "requesterUser",
-            requested_user AS "requestedUser",
+            requester_user AS "from",
+            requested_user AS "to",
             content,
             created_at AS "createdAt"`,
-      [id]
+      [remove, id]
     );
 
     return res.rows[0];
   }
 
-  static async respondToRequest(id, requestedUser, requesterUser) {
+  static async respondToRequest(id, to, from) {
     const userCheck = await db.query(
       `SELECT 
             id,
@@ -224,7 +208,7 @@ class DirectRequests {
             requested_user=$2
         AND
             requester_user=$3`,
-      [id, requestedUser, requesterUser]
+      [id, to, from]
     );
 
     if (!userCheck.rows[0]) {

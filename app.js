@@ -4,8 +4,10 @@ const { NotFoundError } = require("./expressError");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");
 const interestsRoutes = require("./routes/interests");
+const requestRoutes = require("./routes/requests");
 const directMessagesRoutes = require("./routes/directConversations");
 const groupMessagesRoutes = require("./routes/groupConversations");
+
 const { sessionMiddleware, corsMiddleware } = require("./serverConfig");
 const app = express();
 
@@ -21,6 +23,7 @@ app.use(sessionMiddleware);
 app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/interests", interestsRoutes);
+app.use("/requests", requestRoutes);
 app.use("/directMessage", directMessagesRoutes);
 app.use("/groupMessage", groupMessagesRoutes);
 

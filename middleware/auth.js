@@ -28,10 +28,7 @@ function ensureCorrectUser(req, res, next) {
 
 function ensureCorrectUserForRequest(req, res, next) {
   try {
-    if (
-      !req.session.user ||
-      req.body.requesterUser !== req.session.user.username
-    ) {
+    if (!req.session.user || req.body.from !== req.session.user.username) {
       throw new UnauthorizedError("Cannot make a request for another user!");
     }
     return next();
@@ -43,7 +40,7 @@ function ensureCorrectUserForRequest(req, res, next) {
 async function checkRequestAuth(req, res, next) {
   try {
     let check = await DirectRequests.getRequestById(req.params.id);
-    if (!check || check.requesterUser !== req.session.user.username) {
+    if (!check || check.from !== req.session.user.username) {
       throw new UnauthorizedError("Cannot change a request for another user!");
     }
     return next();
@@ -54,10 +51,7 @@ async function checkRequestAuth(req, res, next) {
 
 function ensureCorrectUserForReponse(req, res, next) {
   try {
-    if (
-      !req.session.user ||
-      req.body.requestedUser !== req.session.user.username
-    ) {
+    if (!req.session.user || req.body.to !== req.session.user.username) {
       throw new UnauthorizedError(
         "Cannot reponse to a request for another user!"
       );

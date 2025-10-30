@@ -1,11 +1,22 @@
 const User = require("../models/users");
 const Interests = require("../models/interests");
 const DirectRequests = require("../models/directRequests");
+const { ForbiddenError } = require("../expressError");
 
 const userCheck = async (req, res, next) => {
   try {
     const { username } = req.params;
+    const currentUser = req.session.user.username;
     const user = await User.userCheck(username);
+
+    if (user && currentUser !== username) {
+      conversationExists = await DirectRequests.checkConversationExists(
+        currentUser,
+        username
+      );
+      if (conversationExists)
+        throw new ForbiddenError("Conversation already exists");
+    }
 
     return res.status(200).send({ user });
   } catch (err) {

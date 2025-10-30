@@ -34,6 +34,34 @@ io.on("connection", async (socket) => {
     })
   );
 
+  socket.on("addRequest", ({ requestType, countType, request, to }) => {
+    let recipientUID = users.get(to);
+    if (recipientUID) {
+      io.to(recipientUID).emit("addRequest", {
+        request,
+        requestType,
+        countType,
+      });
+      io.to(recipientUID).emit("updateUnansweredRequests", {
+        change: 1,
+      });
+    }
+  });
+
+  socket.on("removeRequest", ({ requestType, countType, request, to }) => {
+    let recipientUID = users.get(to);
+    if (recipientUID) {
+      io.to(recipientUID).emit("removeRequest", {
+        request,
+        requestType,
+        countType,
+      });
+      io.to(recipientUID).emit("updateUnansweredRequests", {
+        change: -1,
+      });
+    }
+  });
+
   socket.on("addToDirectRequestList", ({ request, unansweredRequests, to }) => {
     let recipientUID = users.get(to);
     if (recipientUID) {
@@ -46,8 +74,8 @@ io.on("connection", async (socket) => {
     }
   });
 
-  socket.on("updateUnansweredRequests", ({ unansweredRequests }) => {
-    session.user.unansweredRequests = unansweredRequests;
+  socket.on("updateUnansweredRequests", ({ change }) => {
+    session.user.unansweredRequests += change;
     session.save();
   });
 
@@ -104,10 +132,14 @@ io.on("connection", async (socket) => {
     }
   });
 
-  socket.on("directResponse", ({ response, to }) => {
+  socket.on("response", ({ response, to, requestType, countType }) => {
     let recipientUID = users.get(to);
     if (recipientUID) {
-      io.to(recipientUID).emit("removeSentRequest", { id: response.requestID });
+      io.to(recipientUID).emit("removeRequest", {
+        request: response,
+        requestType,
+        countType,
+      });
     }
   });
 

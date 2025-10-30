@@ -1,6 +1,7 @@
 const Authorization = require("../models/auth");
 const DirectConversations = require("../models/directConversations");
 const DirectRequests = require("../models/directRequests");
+const Requests = require("../models/requests");
 const Interests = require("../models/interests");
 
 const registerUser = async (req, res, next) => {
@@ -50,8 +51,9 @@ const logInUser = async (req, res, next) => {
       password,
     });
 
-    const { unansweredRequests } =
-      await DirectRequests.getUnansweredRequestCount(username);
+    const { unansweredRequests } = await Requests.getUnansweredRequestCount(
+      username
+    );
 
     const { unreadMessages } =
       await DirectConversations.getAllUnreadMessageCount(username);
