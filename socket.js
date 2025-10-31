@@ -9,6 +9,8 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: corsOptions,
+  pingInterval: 25000,
+  pingTimeout: 60000,
 });
 
 // for storing user socket ids
@@ -33,6 +35,8 @@ io.on("connection", async (socket) => {
       return "group:" + id;
     })
   );
+
+  socket.broadcast.emit("isOnline", { user: username, isOnline: true });
 
   socket.on("addRequest", ({ requestType, countType, request, to }) => {
     let recipientUID = users.get(to);
@@ -111,6 +115,11 @@ io.on("connection", async (socket) => {
     }
   });
 
+  socket.on("isOnline", (user, callback) => {
+    const isOnline = users.has(user);
+    callback(isOnline);
+  });
+
   socket.on("removeDirectRequest", ({ unansweredRequests, to }) => {
     let recipientUID = users.get(to);
     if (recipientUID) {
@@ -167,10 +176,23 @@ io.on("connection", async (socket) => {
     socket.join("group:" + group.id);
   });
 
-  socket.on("disconnect", () => {
+  socket.on("addUserToGroup", ({ groupID, user }) => {
+    console.log(user, groupID);
+    socket.to("group:" + groupID).emit("addUserToGroup", {
+      groupID,
+      user,
+    });
+  });
+
+  socket.on("disconnect", (reason) => {
     users.delete(username);
+    io.emit("isOnline", { user: username, isOnline: false });
     console.log(
-      "*****User " + socket.request.session.user.username + " Disconnected*****"
+      "*****User " +
+        socket.request.session.user.username +
+        " Disconnected: " +
+        reason +
+        "*****"
     );
   });
 });

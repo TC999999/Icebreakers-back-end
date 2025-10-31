@@ -48,6 +48,20 @@ class GroupConversations {
         VALUES ($1, $2)`,
       [username, group_conversation_id]
     );
+
+    let res = await db.query(
+      `
+      SELECT 
+        username, 
+        favorite_color AS "favoriteColor" 
+      FROM 
+        users 
+      WHERE 
+        username=$1`,
+      [username]
+    );
+
+    return res.rows[0];
   }
 
   static async addMultipleUsers(users, group_conversation_id) {
@@ -87,7 +101,7 @@ class GroupConversations {
       WHERE 
         username=$1 
       GROUP BY 
-        ugc.group_conversation_id`,
+        ugc.username`,
       [username]
     );
 

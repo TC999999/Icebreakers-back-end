@@ -1,8 +1,11 @@
+const GroupConversations = require("../models/groupConversations");
 const GroupRequests = require("../models/groupRequests");
 
 const createInvitation = async (req, res, next) => {
   try {
     const { from, to, content, group } = req.body;
+    console.log(to, group);
+    await GroupRequests.checkGroup(group, to);
 
     const invitation = await GroupRequests.createInvitation(
       from,
@@ -27,6 +30,25 @@ const removeInvitation = async (req, res, next) => {
   }
 };
 
+const respondToInvitation = async (req, res, next) => {
+  try {
+    const { id, to, from, groupID, accepted } = req.body;
+
+    await GroupRequests.respondToInvitation(id, to, from, groupID);
+    let message = "Invitation was declined";
+    let user;
+
+    if (accepted) {
+      user = await GroupConversations.addNewUser(to, groupID);
+      message = "Invitation was accepted";
+    }
+
+    res.status(201).send({ message, user, invitationID: id });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 const createRequest = async (req, res, next) => {
   try {
   } catch (err) {
@@ -34,4 +56,4 @@ const createRequest = async (req, res, next) => {
   }
 };
 
-module.exports = { createInvitation, removeInvitation };
+module.exports = { createInvitation, removeInvitation, respondToInvitation };

@@ -5,7 +5,6 @@ const {
 } = require("../controllers/requests");
 const {
   removeRequest,
-
   getDirectMessageRequests,
   makeRequest,
   respondToRequest,
@@ -13,6 +12,7 @@ const {
 const {
   createInvitation,
   removeInvitation,
+  respondToInvitation,
 } = require("../controllers/groupRequests");
 const {
   ensureCorrectUser,
@@ -44,11 +44,18 @@ router.patch("/direct/update/:id", ensureLoggedIn, removeRequest);
 
 router.post("/direct/response", ensureCorrectUserForReponse, respondToRequest);
 
-// group conversation requests/invitations
+// group conversation invitations
 // router.patch("/group/remove/:id", ensureLoggedIn)
 
+// group conversation invitations
 router.post("/group/invitation/:username", ensureCorrectUser, createInvitation);
 
 router.patch("/group/invitation/update/:id", ensureLoggedIn, removeInvitation);
+
+router.post(
+  "/group/invitation/new/response",
+  ensureCorrectUserForReponse,
+  respondToInvitation
+);
 
 module.exports = router;

@@ -1,6 +1,25 @@
 const db = require("../db");
+const { ForbiddenError } = require("../expressError");
 
 class GroupRequests {
+  static async checkGroup(groupID, to) {
+    const res = await db.query(
+      `
+      SELECT 
+        username
+      FROM 
+        user_to_group_conversations 
+      WHERE 
+        group_conversation_id=$1 
+      AND 
+        username=$2`,
+      [groupID, to]
+    );
+
+    if (res.rows[0]) {
+      throw new ForbiddenError("This user is already in this group");
+    }
+  }
   static async createInvitation(from, to, content, group) {
     const i = await db.query(
       `INSERT INTO 
@@ -73,6 +92,39 @@ class GroupRequests {
     );
 
     return res.rows[0];
+  }
+
+  static async respondToInvitation(id, to, from, groupID) {
+    const userCheck = await db.query(
+      `SELECT 
+            id,
+            invited_user,
+            inviter_user,
+            group_conversation_id
+        FROM
+            group_conversation_invitations
+        WHERE
+            id=$1
+        AND
+            invited_user=$2
+        AND
+            inviter_user=$3
+        AND
+            group_conversation_id=$4`,
+      [id, to, from, groupID]
+    );
+
+    if (!userCheck.rows[0]) {
+      throw new NotFoundError("Request not found");
+    }
+
+    await db.query(
+      `DELETE FROM 
+        group_conversation_invitations 
+      WHERE 
+        id=$1`,
+      [id]
+    );
   }
 }
 module.exports = GroupRequests;
