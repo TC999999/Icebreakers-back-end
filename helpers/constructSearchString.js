@@ -25,63 +25,72 @@ const constructSearchString = (username = "", interests = []) => {
 };
 
 const constructGroupSearchString = (
+  username,
   title = "",
   host = "",
   user = "",
+  newGroups = false,
   interests = []
 ) => {
+  let prepareString = "";
   let filterString = "";
   let values = [];
   let count = 1;
 
-  if (title || host || user || interests.length) {
+  if (title || host || user || interests.length || newGroups) {
+    prepareString += "PREPARE query ";
     filterString += "WHERE ";
   }
 
   if (title) {
-    filterString += `gc.title ILIKE $${count} `;
+    filterString += `title ILIKE $${count} `;
     values = [...values, title];
     count += 1;
   }
 
-  if (title && (host || user || interests.length)) {
+  if (title && (host || user || interests.length || newGroups)) {
     filterString += "AND ";
   }
 
   if (host) {
-    filterString += `gc.host_user ILIKE $${count} `;
+    filterString += `host ILIKE $${count} `;
     values = [...values, host];
     count += 1;
   }
 
-  if (host && (user || interests.length)) {
+  if (host && (user || interests.length || newGroups)) {
     filterString += "AND ";
   }
 
   if (user) {
-    filterString += `ugc.username ILIKE $${count} `;
-    values = [...values, user];
+    filterString += `users @> $${count} `;
+    values = [...values, `[{"username":"${user}"}]`];
     count += 1;
   }
 
-  if (user && interests.length) {
+  if (user && (interests.length || newGroups)) {
+    filterString += "AND ";
+  }
+
+  if (newGroups) {
+    filterString += `NOT users @> $${count} `;
+    values = [...values, `[{"username":"${username}"}]`];
+    count += 1;
+  }
+
+  if (newGroups && interests.length) {
     filterString += "AND ";
   }
 
   if (interests.length) {
-    let iS = interests.reduce((acc, cv, i) => {
-      if (i === interests.length - 1) {
-        return (acc += "igc.topic_id=" + `$${i + count}`);
-      } else {
-        return (acc += "igc.topic_id=" + `$${i + count}` + " OR ");
-      }
-    }, "");
-
-    filterString += "(" + iS + ") ";
-    values = [...values, ...interests];
+    filterString += `interests ?| $${count} `;
+    values = [...values, interests];
   }
 
   return { filterString, values };
 };
 
-module.exports = { constructGroupSearchString, constructSearchString };
+module.exports = {
+  constructGroupSearchString,
+  constructSearchString,
+};

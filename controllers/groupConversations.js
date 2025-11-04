@@ -38,16 +38,22 @@ const getAllGroupNames = async (req, res, next) => {
 
 const searchGroups = async (req, res, next) => {
   try {
-    const { title, host, user, similarInterests } = req.query;
-    const interests = await User.getSingleUserInterestIDs(
-      req.session.user.username,
+    const { title, host, user, similarInterests, newGroups } = req.query;
+
+    const username = req.session.user.username;
+
+    const interests = await User.getSingleUserInterests(
+      username,
       similarInterests
     );
+
     const groups = await GroupConversations.searchGroups(
+      username,
       title,
       host,
       user,
-      interests
+      interests,
+      newGroups
     );
     return res.status(200).send({ groups });
   } catch (err) {

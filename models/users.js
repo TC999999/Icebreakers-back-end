@@ -102,15 +102,12 @@ class User {
     });
   }
 
-  static async getSingleUserInterestIDs(
-    username,
-    findSimilarInterests = false
-  ) {
+  static async getSingleUserInterests(username, findSimilarInterests) {
     if (findSimilarInterests) {
       const res = await db.query(
         `
       SELECT 
-        JSON_AGG(i.id) AS interests 
+        JSON_AGG(i.topic) AS interests
       FROM 
         users AS u
       JOIN 
@@ -123,34 +120,6 @@ class User {
         iu.topic_id=i.id 
       WHERE 
         u.username=$1`,
-        [username]
-      );
-
-      return res.rows[0].interests;
-    }
-    return [];
-  }
-
-  static async getSingleUserInterests(username, findSimilarInterests) {
-    if (findSimilarInterests) {
-      const res = await db.query(
-        `
-      SELECT 
-        JSON_AGG(interests.topic) 
-      AS 
-        interests 
-      FROM 
-        users 
-      JOIN 
-        interests_to_users 
-      ON 
-        users.username=interests_to_users.username 
-      JOIN 
-        interests 
-      ON 
-        interests_to_users.topic_id=interests.id 
-      WHERE 
-        users.username=$1`,
         [username]
       );
 
