@@ -177,7 +177,6 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("addUserToGroup", ({ groupID, user }) => {
-    console.log(user, groupID);
     socket.to("group:" + groupID).emit("addUserToGroup", {
       groupID,
       user,

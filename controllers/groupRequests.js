@@ -4,7 +4,6 @@ const GroupRequests = require("../models/groupRequests");
 const createInvitation = async (req, res, next) => {
   try {
     const { from, to, content, group } = req.body;
-    console.log(to, group);
     await GroupRequests.checkGroup(group, to);
 
     const invitation = await GroupRequests.createInvitation(

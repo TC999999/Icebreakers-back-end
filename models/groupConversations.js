@@ -114,8 +114,6 @@ class GroupConversations {
       user,
       interests
     );
-
-    console.log(filterString, values);
     const res = await db.query(
       `
       SELECT 

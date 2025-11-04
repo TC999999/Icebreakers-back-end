@@ -39,7 +39,6 @@ const getAllGroupNames = async (req, res, next) => {
 const searchGroups = async (req, res, next) => {
   try {
     const { title, host, user, similarInterests } = req.query;
-    console.log(title, host, user, similarInterests);
     const interests = await User.getSingleUserInterestIDs(
       req.session.user.username,
       similarInterests
