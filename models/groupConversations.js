@@ -1,5 +1,8 @@
 const db = require("../db");
 const { UnauthorizedError } = require("../expressError");
+const {
+  constructGroupSearchString,
+} = require("../helpers/constructSearchString");
 const { insertMultipleUsers } = require("../helpers/insertMultipleSQL");
 
 class GroupConversations {
@@ -89,6 +92,88 @@ class GroupConversations {
     );
 
     return res.rows[0];
+  }
+
+  static async getAllGroupNames() {
+    const res = await db.query(
+      `
+    SELECT
+      gc.title,
+      gc.host_user AS "host"
+    FROM
+      group_conversations AS gc`
+    );
+
+    return res.rows;
+  }
+
+  static async searchGroups(title, host, user, interests) {
+    const { filterString, values } = constructGroupSearchString(
+      title,
+      host,
+      user,
+      interests
+    );
+
+    console.log(filterString, values);
+    const res = await db.query(
+      `
+      SELECT 
+        gc.id, 
+        gc.title, 
+        gc.host_user AS "host", 
+        gc.created_at AS "createdAt", 
+        i.interests, 
+        u.users 
+      FROM 
+        group_conversations AS gc 
+      JOIN 
+        (SELECT 
+          igc.group_conversation_id AS "group", 
+          JSONB_AGG(i.topic) AS "interests" 
+        FROM
+          interests_to_group_conversations AS igc 
+        JOIN 
+          interests AS i 
+        ON 
+          i.id=igc.topic_id 
+        GROUP BY igc.group_conversation_id) AS i 
+      ON 
+        gc.id=i.group 
+      JOIN 
+        interests_to_group_conversations AS igc 
+      ON 
+        igc.group_conversation_id=gc.id 
+      JOIN 
+        (SELECT 
+          ugc.group_conversation_id, 
+          JSONB_AGG(
+            JSONB_BUILD_OBJECT(
+              'username', ugc.username,
+              'favoriteColor', u.favorite_color
+            )
+          ) AS users 
+        FROM 
+          user_to_group_conversations AS ugc 
+        JOIN 
+          users AS u 
+        ON 
+          ugc.username=u.username 
+        GROUP BY 
+          ugc.group_conversation_id) AS u 
+      ON 
+        u.group_conversation_id=gc.id 
+      JOIN 
+        user_to_group_conversations AS ugc 
+      ON 
+        ugc.group_conversation_id=u.group_conversation_id
+        ${filterString} 
+      GROUP BY 
+        gc.id, i.interests,u.users`,
+      values
+    );
+
+    return res.rows;
   }
 
   static async getAllGroupsSocket(username) {

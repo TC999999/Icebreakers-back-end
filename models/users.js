@@ -1,5 +1,5 @@
 const db = require("../db");
-const constructSearchString = require("../helpers/constructSearchString");
+const { constructSearchString } = require("../helpers/constructSearchString");
 const { NotFoundError } = require("../expressError");
 const DirectRequests = require("./directRequests");
 const { insertMultipleSQL } = require("../helpers/insertMultipleSQL");
@@ -100,6 +100,35 @@ class User {
     return users.rows.map((user) => {
       return user.username;
     });
+  }
+
+  static async getSingleUserInterestIDs(
+    username,
+    findSimilarInterests = false
+  ) {
+    if (findSimilarInterests) {
+      const res = await db.query(
+        `
+      SELECT 
+        JSON_AGG(i.id) AS interests 
+      FROM 
+        users AS u
+      JOIN 
+        interests_to_users AS iu
+      ON 
+        u.username=iu.username 
+      JOIN 
+        interests AS i
+      ON 
+        iu.topic_id=i.id 
+      WHERE 
+        u.username=$1`,
+        [username]
+      );
+
+      return res.rows[0].interests;
+    }
+    return [];
   }
 
   static async getSingleUserInterests(username, findSimilarInterests) {
