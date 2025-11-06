@@ -185,42 +185,39 @@ class GroupConversations {
   }
 
   static async getAllGroups(username) {
-    const hostedGroupsRes = await db.query(
+    const res = await db.query(
       `SELECT 
-        id,
-        title,
-        created_at AS "createdAt"
-      FROM
-        group_conversations
-      WHERE
-        host_user=$1`,
+        (SELECT 
+          COALESCE(JSONB_AGG(
+            JSONB_BUILD_OBJECT(
+              'id', gc.id, 
+              'title', gc.title, 
+              'createdAt', gc.created_at)
+            ), '[]'::jsonb)
+        FROM 
+          group_conversations AS gc 
+        WHERE 
+          host_user=$1) AS "hostedGroups", 
+        (SELECT 
+          COALESCE(JSONB_AGG(
+            JSONB_BUILD_OBJECT(
+              'id', gc.id, 
+              'title', gc.title, 
+              'host', gc.host_user, 
+              'createdAt', gc.created_at)
+            ), '[]'::jsonb) 
+        FROM 
+          group_conversations AS gc 
+        JOIN 
+          user_to_group_conversations AS ugc 
+        ON 
+          gc.id=ugc.group_conversation_id 
+        WHERE 
+          gc.host_user!=$1 AND ugc.username=$1) AS "nonHostedGroups"`,
       [username]
     );
 
-    const hostedGroups = hostedGroupsRes.rows;
-
-    const nonHostedGroupsRes = await db.query(
-      `SELECT 
-        gc.id, 
-        gc.title, 
-        gc.host_user AS "host", 
-        gc.created_at AS "createdAt"
-      FROM 
-        group_conversations AS gc 
-      JOIN 
-        user_to_group_conversations AS ugc 
-      ON 
-        gc.id=ugc.group_conversation_id 
-      WHERE 
-        host_user!=$1 
-      AND 
-        username=$1`,
-      [username]
-    );
-
-    const nonHostedGroups = nonHostedGroupsRes.rows;
-
-    return { hostedGroups, nonHostedGroups };
+    return res.rows[0];
   }
 
   static async getAllGroupsSingleList(username) {
