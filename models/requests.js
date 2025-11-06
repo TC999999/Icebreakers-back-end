@@ -1,5 +1,6 @@
 const db = require("../db");
 const constructRequestString = require("../helpers/constructRequestString");
+const returnCountString = require("../helpers/returnCountString");
 
 class AllRequests {
   static async getAllRequests(username, params) {
@@ -10,66 +11,16 @@ class AllRequests {
 
   static async getAllRequestCount(username) {
     const res = await db.query(
-      `
-        SELECT 
-            (SELECT 
-                COUNT(*) 
-            FROM 
-                direct_conversation_requests 
-            WHERE 
-                requested_user=$1 AND is_removed=false) AS "receivedDirectRequestCount", 
-            (SELECT 
-                COUNT(*) 
-            FROM 
-                direct_conversation_requests 
-            WHERE 
-                requester_user=$1 AND is_removed=false) AS "sentDirectRequestCount", 
-            (SELECT 
-                COUNT(*) 
-            FROM 
-                direct_conversation_requests 
-            WHERE 
-                requester_user=$1 AND is_removed=true) AS "removedDirectRequestCount", 
-            (SELECT 
-                COUNT(*) 
-            FROM 
-                group_conversation_invitations 
-            WHERE 
-                invited_user=$1 AND is_removed=false) AS "receivedGroupInvitationCount", 
-            (SELECT 
-                COUNT(*) 
-            FROM 
-                group_conversation_invitations 
-            WHERE 
-                inviter_user=$1 AND is_removed=false) AS "sentGroupInvitationCount", 
-            (SELECT 
-                COUNT(*) 
-            FROM 
-                group_conversation_invitations 
-            WHERE 
-                inviter_user=$1 AND is_removed=true) AS "removedGroupInvitationCount", 
-            (SELECT 
-                COUNT(*) 
-            FROM 
-                group_conversation_requests AS r 
-            JOIN 
-                group_conversations AS g 
-            ON 
-                r.group_conversation_id=g.id 
-            WHERE 
-                g.host_user=$1 AND r.is_removed=false) AS "receivedGroupRequestCount", 
-            (SELECT 
-                COUNT(*) 
-            FROM 
-                group_conversation_requests 
-            WHERE 
-                requester_user=$1 AND is_removed=false) AS "sentGroupRequestCount", 
-            (SELECT 
-                COUNT(*) 
-            FROM 
-                group_conversation_requests 
-            WHERE 
-                requester_user=$1 AND is_removed=true) AS "removedGroupRequestCount"`,
+      `SELECT 
+            ${returnCountString("receivedDirectRequestCount")}, 
+            ${returnCountString("sentDirectRequestCount")}, 
+            ${returnCountString("removedDirectRequestCount")},
+            ${returnCountString("receivedGroupInvitationCount")},
+            ${returnCountString("sentGroupInvitationCount")},
+            ${returnCountString("removedGroupInvitationCount")},
+            ${returnCountString("receivedGroupRequestCount")},
+            ${returnCountString("sentGroupRequestCount")}, 
+            ${returnCountString("removedGroupRequestCount")}`,
       [username]
     );
 
@@ -85,30 +36,11 @@ class AllRequests {
       `
         SELECT 
             (
-                (SELECT 
-                    COUNT(*) 
-                FROM 
-                    direct_conversation_requests 
-                WHERE 
-                    requested_user=$1 AND is_removed=false) 
+                ${returnCountString("receivedDirectRequestCount", false)}
             + 
-                (SELECT 
-                    COUNT(*) 
-                FROM 
-                    group_conversation_requests AS r 
-                JOIN 
-                    group_conversations AS gc 
-                ON 
-                    r.group_conversation_id=gc.id 
-                WHERE 
-                    gc.host_user=$1 AND is_removed=false) 
+                ${returnCountString("receivedGroupInvitationCount", false)}
             + 
-                (SELECT 
-                    COUNT(*) 
-                FROM 
-                    group_conversation_invitations 
-                WHERE 
-                    invited_user=$1 AND is_removed=false)
+                ${returnCountString("receivedGroupRequestCount", false)}
             ) AS "unansweredRequests"`,
       [username]
     );
