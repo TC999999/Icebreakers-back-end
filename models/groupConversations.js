@@ -125,45 +125,36 @@ class GroupConversations {
             gc.title, 
             gc.host_user AS "host", 
             gc.created_at AS "createdAt", 
-            i.interests, 
-            u.users 
-          FROM 
-            group_conversations AS gc 
-          JOIN 
             (SELECT 
-              igc.group_conversation_id AS "group", 
-              JSONB_AGG(i.topic) AS "interests" 
+              JSONB_AGG(i.topic) 
             FROM 
-              interests_to_group_conversations AS igc 
-            JOIN 
               interests AS i 
+            JOIN 
+              interests_to_group_conversations AS igc 
             ON 
-              i.id=igc.topic_id 
+              igc.topic_id=i.id 
+            WHERE 
+              igc.group_conversation_id=gc.id 
             GROUP BY 
-              igc.group_conversation_id) AS i 
-          ON 
-            gc.id=i.group 
-          JOIN 
+              gc.id) AS "interests", 
             (SELECT 
-              ugc.group_conversation_id, 
               JSONB_AGG(
                 JSONB_BUILD_OBJECT(
-                  'username',ugc.username,
-                  'favoriteColor', u.favorite_color
-                )
-              ) AS users 
+                'username', u.username, 
+                'favoriteColor', u.favorite_color)
+              ) 
             FROM 
-              user_to_group_conversations AS ugc
-            JOIN 
               users AS u 
+            JOIN 
+              user_to_group_conversations AS ugc 
             ON 
-              ugc.username=u.username 
+              u.username=ugc.username 
+            WHERE 
+              ugc.group_conversation_id=gc.id 
             GROUP BY 
-              ugc.group_conversation_id) AS u 
-          ON 
-            u.group_conversation_id=gc.id 
-          GROUP BY 
-            gc.id, i.interests, u.users) 
+              gc.id) AS "users" 
+          FROM 
+            group_conversations AS gc) 
       SELECT
         * 
       FROM 
@@ -258,45 +249,36 @@ class GroupConversations {
         gc.description,
         gc.host_user AS "host", 
         gc.created_at AS "createdAt", 
-        u.users, 
-        i.interests 
-      FROM 
-        group_conversations AS gc 
-      JOIN 
         (SELECT 
-          ugc.group_conversation_id AS gcID, 
+            JSONB_AGG(i.topic) 
+        FROM 
+          interests AS i 
+        JOIN 
+          interests_to_group_conversations AS igc 
+        ON 
+          igc.topic_id=i.id 
+        WHERE 
+          igc.group_conversation_id=gc.id 
+        GROUP BY 
+          gc.id) AS "interests",
+        (SELECT 
           JSONB_AGG(
             JSONB_BUILD_OBJECT(
               'username', u.username, 
-              'favoriteColor', u.favorite_color
-            )
-          ) AS users 
+              'favoriteColor', u.favorite_color)
+            ) 
         FROM 
-          user_to_group_conversations AS ugc 
-        JOIN 
           users AS u 
+        JOIN 
+          user_to_group_conversations AS ugc 
         ON 
           u.username=ugc.username 
+        WHERE 
+          ugc.group_conversation_id=gc.id 
         GROUP BY 
-          ugc.group_conversation_id
-        ) AS u 
-      ON 
-        u.gcid=gc.id 
-      JOIN 
-        (SELECT 
-          igc.group_conversation_id AS gcid, 
-          JSONB_AGG(i.topic) AS interests 
-        FROM 
-          interests_to_group_conversations AS igc 
-        JOIN 
-          interests AS i 
-        ON 
-          i.id=igc.topic_id 
-        GROUP BY 
-          igc.group_conversation_id
-        ) AS i 
-      ON 
-        i.gcid=gc.id 
+          gc.id) AS "users" 
+      FROM 
+        group_conversations AS gc
       WHERE 
         gc.id=$1`,
       [id]

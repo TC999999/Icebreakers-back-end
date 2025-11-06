@@ -32,13 +32,11 @@ const constructGroupSearchString = (
   newGroups = false,
   interests = []
 ) => {
-  let prepareString = "";
   let filterString = "";
   let values = [];
   let count = 1;
 
   if (title || host || user || interests.length || newGroups) {
-    prepareString += "PREPARE query ";
     filterString += "WHERE ";
   }
 
