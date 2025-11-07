@@ -66,18 +66,6 @@ io.on("connection", async (socket) => {
     }
   });
 
-  socket.on("addToDirectRequestList", ({ request, unansweredRequests, to }) => {
-    let recipientUID = users.get(to);
-    if (recipientUID) {
-      io.to(recipientUID).emit("addToDirectRequestList", {
-        request,
-      });
-      io.to(recipientUID).emit("updateUnansweredRequests", {
-        unansweredRequests,
-      });
-    }
-  });
-
   socket.on("updateUnansweredRequests", ({ change }) => {
     session.user.unansweredRequests += change;
     session.save();
@@ -118,18 +106,6 @@ io.on("connection", async (socket) => {
   socket.on("isOnline", (user, callback) => {
     const isOnline = users.has(user);
     callback(isOnline);
-  });
-
-  socket.on("removeDirectRequest", ({ unansweredRequests, to }) => {
-    let recipientUID = users.get(to);
-    if (recipientUID) {
-      io.to(recipientUID).emit("removeDirectRequest", {
-        from: username,
-      });
-      io.to(recipientUID).emit("updateUnansweredRequests", {
-        unansweredRequests,
-      });
-    }
   });
 
   socket.on("addConversation", ({ conversation, to }) => {

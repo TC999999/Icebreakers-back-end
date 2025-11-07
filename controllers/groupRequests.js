@@ -48,11 +48,35 @@ const respondToInvitation = async (req, res, next) => {
   }
 };
 
-const createRequest = async (req, res, next) => {
+const createGroupRequest = async (req, res, next) => {
   try {
+    const { id } = req.params;
+    const username = req.session.user.username;
+    const { content } = req.body;
+
+    const request = await GroupRequests.createRequest(username, content, id);
+
+    return res.status(201).send({ request });
   } catch (err) {
     return next(err);
   }
 };
 
-module.exports = { createInvitation, removeInvitation, respondToInvitation };
+const removeGroupRequest = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { remove } = req.body;
+    const request = await GroupRequests.removeRequest(remove, id);
+    return res.status(200).send({ request });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+module.exports = {
+  createInvitation,
+  removeInvitation,
+  respondToInvitation,
+  createGroupRequest,
+  removeGroupRequest,
+};

@@ -13,11 +13,12 @@ const {
   createInvitation,
   removeInvitation,
   respondToInvitation,
+  createGroupRequest,
+  removeGroupRequest,
 } = require("../controllers/groupRequests");
 const {
   ensureCorrectUser,
   ensureCorrectUserForRequest,
-  checkRequestAuth,
   ensureCorrectUserForReponse,
   ensureLoggedIn,
 } = require("../middleware/auth");
@@ -44,8 +45,10 @@ router.patch("/direct/update/:id", ensureLoggedIn, removeRequest);
 
 router.post("/direct/response", ensureCorrectUserForReponse, respondToRequest);
 
-// group conversation invitations
-// router.patch("/group/remove/:id", ensureLoggedIn)
+// group conversation requests
+router.post("/group/:id", ensureLoggedIn, createGroupRequest);
+
+router.patch("/group/update/:id", ensureLoggedIn, removeGroupRequest);
 
 // group conversation invitations
 router.post("/group/invitation/:username", ensureCorrectUser, createInvitation);
