@@ -1,4 +1,5 @@
 const GroupConversations = require("../models/groupConversations");
+const GroupRequests = require("../models/groupRequests");
 const Interests = require("../models/interests");
 const User = require("../models/users");
 
@@ -82,12 +83,22 @@ const getAllGroups = async (req, res, next) => {
 const getGroup = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const isInGroup = await GroupConversations.checkGroup(
-      req.session.user.username,
-      id
-    );
-    const group = await GroupConversations.getGroupInfo(id);
-    return res.status(200).send({ group, isInGroup });
+    const { getSimple } = req.query;
+    if (getSimple === "true") {
+      const group = await GroupConversations.getSimpleGroupInfo(id);
+      return res.status(200).send({ group });
+    } else {
+      const isInGroup = await GroupConversations.checkGroup(
+        req.session.user.username,
+        id
+      );
+      const requestPending = await GroupRequests.checkRequest(
+        id,
+        req.session.user.username
+      );
+      const group = await GroupConversations.getGroupInfo(id);
+      return res.status(200).send({ group, isInGroup, requestPending });
+    }
   } catch (err) {
     return next(err);
   }
@@ -107,6 +118,16 @@ const createNewMessage = async (req, res, next) => {
   }
 };
 
+const getSimpleGroupInfo = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const group = await GroupConversations.getSimpleGroupInfo(id);
+    return res.status(200).send({ group });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 module.exports = {
   createNewConversation,
   getAllGroupNames,
@@ -114,4 +135,5 @@ module.exports = {
   createNewMessage,
   getGroup,
   searchGroups,
+  getSimpleGroupInfo,
 };

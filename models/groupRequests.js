@@ -17,8 +17,23 @@ class GroupRequests {
     );
 
     if (res.rows[0]) {
-      throw new ForbiddenError("This user is already in this group");
+      throw new ForbiddenError(`${to} is already in this group`);
     }
+  }
+
+  static async checkRequest(id, username) {
+    const res = await db.query(
+      `
+    SELECT 
+      requester_user AS "username"
+    FROM 
+      group_conversation_requests 
+    WHERE 
+      group_conversation_id=$1 AND requester_user=$2`,
+      [id, username]
+    );
+
+    return res.rows.length > 0;
   }
 
   static async createRequest(from, content, group) {

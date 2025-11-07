@@ -1,3 +1,4 @@
+const { ForbiddenError } = require("../expressError");
 const GroupConversations = require("../models/groupConversations");
 const GroupRequests = require("../models/groupRequests");
 
@@ -53,6 +54,11 @@ const createGroupRequest = async (req, res, next) => {
     const { id } = req.params;
     const username = req.session.user.username;
     const { content } = req.body;
+
+    await GroupRequests.checkGroup(id, username);
+
+    if (await GroupRequests.checkRequest(id, username))
+      throw new ForbiddenError(`${username} request is already pending`);
 
     const request = await GroupRequests.createRequest(username, content, id);
 

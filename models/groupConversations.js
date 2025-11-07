@@ -238,6 +238,21 @@ class GroupConversations {
     return res.rows;
   }
 
+  static async getSimpleGroupInfo(id) {
+    const res = await db.query(
+      `SELECT
+        title,
+        host_user AS "host"
+      FROM 
+        group_conversations
+      WHERE 
+        id=$1`,
+      [id]
+    );
+
+    return res.rows[0];
+  }
+
   static async getGroupInfo(id) {
     const res = await db.query(
       `SELECT 
