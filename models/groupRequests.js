@@ -1,5 +1,5 @@
 const db = require("../db");
-const { ForbiddenError } = require("../expressError");
+const { ForbiddenError, NotFoundError } = require("../expressError");
 
 class GroupRequests {
   static async checkGroup(groupID, to) {
@@ -107,6 +107,37 @@ class GroupRequests {
     );
 
     return res.rows[0];
+  }
+
+  static async respondToRequest(id, from, groupID) {
+    const userCheck = await db.query(
+      `SELECT 
+            id,
+            requester_user,
+            group_conversation_id
+        FROM
+            group_conversation_requests
+        WHERE
+            id=$1
+        AND
+            requester_user=$2
+        AND
+            group_conversation_id=$3`,
+      [id, from, groupID]
+    );
+
+    if (!userCheck.rows[0]) {
+      throw new NotFoundError("Request not found");
+    }
+
+    await db.query(
+      `
+        DELETE FROM 
+          group_conversation_requests 
+        WHERE 
+          id=$1`,
+      [id]
+    );
   }
 
   static async createInvitation(from, to, content, group) {

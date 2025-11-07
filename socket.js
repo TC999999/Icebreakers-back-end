@@ -25,7 +25,7 @@ io.on("connection", async (socket) => {
   const username = session.user.username;
 
   // sets username in user map above for sending and receiving private messages
-  users.set(username, socket.id);
+  users.set(username, { id: socket.id, socket });
   console.log("*****User " + username + " Connected*****");
 
   // joins/creates rooms for sending and receiving group messages
@@ -39,7 +39,7 @@ io.on("connection", async (socket) => {
   socket.broadcast.emit("isOnline", { user: username, isOnline: true });
 
   socket.on("addRequest", ({ requestType, countType, request, to }) => {
-    let recipientUID = users.get(to);
+    let recipientUID = users.get(to).id;
     if (recipientUID) {
       io.to(recipientUID).emit("addRequest", {
         request,
@@ -53,7 +53,7 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("removeRequest", ({ requestType, countType, request, to }) => {
-    let recipientUID = users.get(to);
+    let recipientUID = users.get(to).id;
     if (recipientUID) {
       io.to(recipientUID).emit("removeRequest", {
         request,
@@ -93,7 +93,7 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("isTyping", ({ otherUser, id, to, isTyping }) => {
-    let recipientUID = users.get(to);
+    let recipientUID = users.get(to).id;
     if (recipientUID) {
       io.to(recipientUID).emit("isTyping", {
         otherUser,
@@ -104,12 +104,12 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("isOnline", (user, callback) => {
-    const isOnline = users.has(user);
+    const isOnline = users.has(user).id;
     callback(isOnline);
   });
 
   socket.on("addConversation", ({ conversation, to }) => {
-    let recipientUID = users.get(to);
+    let recipientUID = users.get(to).id;
     if (recipientUID) {
       io.to(recipientUID).emit("addConversation", {
         conversation,
@@ -118,7 +118,7 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("response", ({ response, to, requestType, countType }) => {
-    let recipientUID = users.get(to);
+    let recipientUID = users.get(to).id;
     if (recipientUID) {
       io.to(recipientUID).emit("removeRequest", {
         request: response,
@@ -129,7 +129,7 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("directMessage", ({ message, id, to }) => {
-    let recipientUID = users.get(to);
+    let recipientUID = users.get(to).id;
     if (recipientUID) {
       io.to(recipientUID).emit("increaseUnreadMessages");
       io.to(recipientUID).emit("directMessage", {
@@ -140,7 +140,7 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("editConversation", ({ conversation, to }) => {
-    let recipientUID = users.get(to);
+    let recipientUID = users.get(to).id;
     if (recipientUID) {
       io.to(recipientUID).emit("editConversation", {
         conversation,
@@ -150,6 +150,13 @@ io.on("connection", async (socket) => {
 
   socket.on("joinGroup", ({ group }) => {
     socket.join("group:" + group.id);
+  });
+
+  socket.on("bringIntoGroup", ({ to, group }) => {
+    let recipientSocket = users.get(to).socket;
+    if (recipientSocket) {
+      recipientSocket.join("group:" + group.id);
+    }
   });
 
   socket.on("addUserToGroup", ({ groupID, user }) => {

@@ -15,6 +15,7 @@ const {
   respondToInvitation,
   createGroupRequest,
   removeGroupRequest,
+  respondToGroupRequest,
 } = require("../controllers/groupRequests");
 const {
   ensureCorrectUser,
@@ -49,6 +50,8 @@ router.post("/direct/response", ensureCorrectUserForReponse, respondToRequest);
 router.post("/group/:id", ensureLoggedIn, createGroupRequest);
 
 router.patch("/group/update/:id", ensureLoggedIn, removeGroupRequest);
+
+router.post("/group/new/response", ensureLoggedIn, respondToGroupRequest);
 
 // group conversation invitations
 router.post("/group/invitation/:username", ensureCorrectUser, createInvitation);

@@ -79,10 +79,27 @@ const removeGroupRequest = async (req, res, next) => {
   }
 };
 
+const respondToGroupRequest = async (req, res, next) => {
+  try {
+    const { id, from, groupID, accepted } = req.body;
+    await GroupRequests.respondToRequest(id, from, groupID);
+
+    if (accepted) {
+      let user = await GroupConversations.addNewUser(from, groupID);
+
+      return res.status(200).send({ user, message: "invitation accepted" });
+    }
+    return res.status(200).send({ message: "invitation declined" });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 module.exports = {
   createInvitation,
   removeInvitation,
   respondToInvitation,
   createGroupRequest,
   removeGroupRequest,
+  respondToGroupRequest,
 };
