@@ -28,6 +28,13 @@ io.on("connection", async (socket) => {
   users.set(username, { id: socket.id, socket });
   console.log("*****User " + username + " Connected*****");
 
+  socket.broadcast.emit("isOnline", { user: username, isOnline: true });
+
+  socket.on("isOnline", (user, callback) => {
+    const isOnline = users.has(user);
+    callback(isOnline);
+  });
+
   // joins/creates rooms for sending and receiving group messages
   const groups = await GroupConversations.getAllGroupsSocket(username);
   socket.join(
@@ -160,6 +167,7 @@ io.on("connection", async (socket) => {
 
   socket.on("disconnect", (reason) => {
     users.delete(username);
+    io.emit("isOnline", { user: username, isOnline: false });
     console.log(
       "*****User " +
         socket.request.session.user.username +
