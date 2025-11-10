@@ -36,11 +36,10 @@ io.on("connection", async (socket) => {
     })
   );
 
-  socket.broadcast.emit("isOnline", { user: username, isOnline: true });
-
   socket.on("addRequest", ({ requestType, countType, request, to }) => {
     let recipientUID = users.get(to).id;
-    if (recipientUID) {
+    let recipientSocket = users.get(to).socket;
+    if (recipientUID && recipientSocket) {
       io.to(recipientUID).emit("addRequest", {
         request,
         requestType,
@@ -49,12 +48,15 @@ io.on("connection", async (socket) => {
       io.to(recipientUID).emit("updateUnansweredRequests", {
         change: 1,
       });
+      recipientSocket.request.session.user.unansweredRequests += 1;
+      recipientSocket.request.session.save();
     }
   });
 
   socket.on("removeRequest", ({ requestType, countType, request, to }) => {
     let recipientUID = users.get(to).id;
-    if (recipientUID) {
+    let recipientSocket = users.get(to).socket;
+    if (recipientUID && recipientSocket) {
       io.to(recipientUID).emit("removeRequest", {
         request,
         requestType,
@@ -63,12 +65,9 @@ io.on("connection", async (socket) => {
       io.to(recipientUID).emit("updateUnansweredRequests", {
         change: -1,
       });
+      recipientSocket.request.session.user.unansweredRequests += -1;
+      recipientSocket.request.session.save();
     }
-  });
-
-  socket.on("updateUnansweredRequests", ({ change }) => {
-    session.user.unansweredRequests += change;
-    session.save();
   });
 
   socket.on("updateFavoriteColor", ({ favoriteColor }) => {
@@ -76,19 +75,8 @@ io.on("connection", async (socket) => {
     session.save();
   });
 
-  socket.on("increaseUnreadMessages", () => {
-    session.user.unreadMessages += 1;
-    session.save();
-  });
-
   socket.on("clearTotalUnreadMessages", ({ unreadMessages }) => {
     session.user.unreadMessages -= unreadMessages;
-    session.save();
-  });
-
-  socket.on("decreaseUnreadMessages", async ({ id }) => {
-    await DirectConversations.clearUnreadMessages(id, session.user.username);
-    session.user.unreadMessages -= 1;
     session.save();
   });
 
@@ -101,11 +89,6 @@ io.on("connection", async (socket) => {
         isTyping,
       });
     }
-  });
-
-  socket.on("isOnline", (user, callback) => {
-    const isOnline = users.has(user).id;
-    callback(isOnline);
   });
 
   socket.on("addConversation", ({ conversation, to }) => {
@@ -130,13 +113,22 @@ io.on("connection", async (socket) => {
 
   socket.on("directMessage", ({ message, id, to }) => {
     let recipientUID = users.get(to).id;
-    if (recipientUID) {
+    let recipientSocket = users.get(to).socket;
+    if (recipientUID && recipientSocket) {
       io.to(recipientUID).emit("increaseUnreadMessages");
       io.to(recipientUID).emit("directMessage", {
         message,
         id,
       });
+      recipientSocket.request.session.user.unreadMessages += 1;
+      recipientSocket.request.session.save();
     }
+  });
+
+  socket.on("decreaseUnreadMessages", async ({ id }) => {
+    await DirectConversations.clearUnreadMessages(id, session.user.username);
+    session.user.unreadMessages -= 1;
+    session.save();
   });
 
   socket.on("editConversation", ({ conversation, to }) => {
@@ -168,7 +160,6 @@ io.on("connection", async (socket) => {
 
   socket.on("disconnect", (reason) => {
     users.delete(username);
-    io.emit("isOnline", { user: username, isOnline: false });
     console.log(
       "*****User " +
         socket.request.session.user.username +
