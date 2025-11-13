@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-const { UnauthorizedError } = require("../expressError");
+const { UnauthorizedError, ForbiddenError } = require("../expressError");
 const { BCRYPT_WORK_FACTOR } = require("../config");
 const db = require("../db");
 
@@ -11,6 +11,34 @@ class Authorization {
     biography,
     favoriteColor,
   }) {
+    const userCheck = await db.query(
+      `SELECT
+        username
+      FROM 
+        users 
+      WHERE
+        username=$1`,
+      [username]
+    );
+
+    if (userCheck.rows[0]) {
+      throw new ForbiddenError("Username already taken!");
+    }
+
+    const emailCheck = await db.query(
+      `SELECT
+        email_address
+      FROM 
+        users 
+      WHERE
+        email_address=$1`,
+      [emailAddress]
+    );
+
+    if (emailCheck.rows[0]) {
+      throw new ForbiddenError("Email Address already taken!");
+    }
+
     let hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
 
     const res = await db.query(

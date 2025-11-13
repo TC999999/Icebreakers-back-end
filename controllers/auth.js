@@ -1,6 +1,5 @@
 const Authorization = require("../models/auth");
 const DirectConversations = require("../models/directConversations");
-const DirectRequests = require("../models/directRequests");
 const Requests = require("../models/requests");
 const Interests = require("../models/interests");
 

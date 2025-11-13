@@ -165,16 +165,10 @@ class User {
     const res = await db.query(
       `
       SELECT 
-        u.username, 
         email_address AS "emailAddress", 
         biography, 
         favorite_color AS "favoriteColor", 
-        JSONB_OBJECT_AGG(
-          i.id, JSONB_BUILD_OBJECT(
-            'id', i.id, 
-            'topic', i.topic
-          )
-        ) AS "interests" 
+        JSONB_AGG(i.id) AS "interests" 
       FROM 
         users AS u 
       JOIN 
@@ -226,14 +220,10 @@ class User {
       [username]
     );
 
-    let interestsArr = Object.values(interests).map((i) => {
-      return i.id;
-    });
-
     await db.query(
       `INSERT INTO interests_to_users (topic_id, username) VALUES ${insertMultipleSQL(
         username,
-        interestsArr
+        interests
       )}`
     );
 

@@ -84,8 +84,8 @@ const getUserForEdit = async (req, res, next) => {
 
 const editUser = async (req, res, next) => {
   try {
-    const { username, emailAddress, biography, favoriteColor, interests } =
-      req.body;
+    const { username } = req.params;
+    const { emailAddress, biography, favoriteColor, interests } = req.body;
     const { newFavoriteColor } = await User.editUser({
       username,
       emailAddress,
