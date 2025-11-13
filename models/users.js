@@ -1,6 +1,6 @@
 const db = require("../db");
 const { constructSearchString } = require("../helpers/constructSearchString");
-const { NotFoundError } = require("../expressError");
+const { NotFoundError, ForbiddenError } = require("../expressError");
 const DirectRequests = require("./directRequests");
 const { insertMultipleSQL } = require("../helpers/insertMultipleSQL");
 
@@ -196,6 +196,20 @@ class User {
     favoriteColor,
     interests,
   }) {
+    const emailCheck = await db.query(
+      `SELECT
+        email_address
+      FROM 
+        users 
+      WHERE
+        email_address=$1`,
+      [emailAddress]
+    );
+
+    if (emailCheck.rows[0]) {
+      throw new ForbiddenError("Email Address already taken!");
+    }
+
     let updateRes = await db.query(
       `
       UPDATE 

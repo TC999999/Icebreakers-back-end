@@ -44,36 +44,40 @@ io.on("connection", async (socket) => {
   );
 
   socket.on("addRequest", ({ requestType, countType, request, to }) => {
-    let recipientUID = users.get(to).id;
-    let recipientSocket = users.get(to).socket;
-    if (recipientUID && recipientSocket) {
-      io.to(recipientUID).emit("addRequest", {
-        request,
-        requestType,
-        countType,
-      });
-      io.to(recipientUID).emit("updateUnansweredRequests", {
-        change: 1,
-      });
-      recipientSocket.request.session.user.unansweredRequests += 1;
-      recipientSocket.request.session.save();
+    if (users.has(to)) {
+      let recipientUID = users.get(to).id;
+      let recipientSocket = users.get(to).socket;
+      if (recipientUID && recipientSocket) {
+        io.to(recipientUID).emit("addRequest", {
+          request,
+          requestType,
+          countType,
+        });
+        io.to(recipientUID).emit("updateUnansweredRequests", {
+          change: 1,
+        });
+        recipientSocket.request.session.user.unansweredRequests += 1;
+        recipientSocket.request.session.save();
+      }
     }
   });
 
   socket.on("removeRequest", ({ requestType, countType, request, to }) => {
-    let recipientUID = users.get(to).id;
-    let recipientSocket = users.get(to).socket;
-    if (recipientUID && recipientSocket) {
-      io.to(recipientUID).emit("removeRequest", {
-        request,
-        requestType,
-        countType,
-      });
-      io.to(recipientUID).emit("updateUnansweredRequests", {
-        change: -1,
-      });
-      recipientSocket.request.session.user.unansweredRequests += -1;
-      recipientSocket.request.session.save();
+    if (users.has(to)) {
+      let recipientUID = users.get(to).id;
+      let recipientSocket = users.get(to).socket;
+      if (recipientUID && recipientSocket) {
+        io.to(recipientUID).emit("removeRequest", {
+          request,
+          requestType,
+          countType,
+        });
+        io.to(recipientUID).emit("updateUnansweredRequests", {
+          change: -1,
+        });
+        recipientSocket.request.session.user.unansweredRequests += -1;
+        recipientSocket.request.session.save();
+      }
     }
   });
 
@@ -88,47 +92,55 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("isTyping", ({ otherUser, id, to, isTyping }) => {
-    let recipientUID = users.get(to).id;
-    if (recipientUID) {
-      io.to(recipientUID).emit("isTyping", {
-        otherUser,
-        id,
-        isTyping,
-      });
+    if (users.has(to)) {
+      let recipientUID = users.get(to).id;
+      if (recipientUID) {
+        io.to(recipientUID).emit("isTyping", {
+          otherUser,
+          id,
+          isTyping,
+        });
+      }
     }
   });
 
   socket.on("addConversation", ({ conversation, to }) => {
-    let recipientUID = users.get(to).id;
-    if (recipientUID) {
-      io.to(recipientUID).emit("addConversation", {
-        conversation,
-      });
+    if (users.has(to)) {
+      let recipientUID = users.get(to).id;
+      if (recipientUID) {
+        io.to(recipientUID).emit("addConversation", {
+          conversation,
+        });
+      }
     }
   });
 
   socket.on("response", ({ response, to, requestType, countType }) => {
-    let recipientUID = users.get(to).id;
-    if (recipientUID) {
-      io.to(recipientUID).emit("removeRequest", {
-        request: response,
-        requestType,
-        countType,
-      });
+    if (users.has(to)) {
+      let recipientUID = users.get(to).id;
+      if (recipientUID) {
+        io.to(recipientUID).emit("removeRequest", {
+          request: response,
+          requestType,
+          countType,
+        });
+      }
     }
   });
 
   socket.on("directMessage", ({ message, id, to }) => {
-    let recipientUID = users.get(to).id;
-    let recipientSocket = users.get(to).socket;
-    if (recipientUID && recipientSocket) {
-      io.to(recipientUID).emit("increaseUnreadMessages");
-      io.to(recipientUID).emit("directMessage", {
-        message,
-        id,
-      });
-      recipientSocket.request.session.user.unreadMessages += 1;
-      recipientSocket.request.session.save();
+    if (users.has(to)) {
+      let recipientUID = users.get(to).id;
+      let recipientSocket = users.get(to).socket;
+      if (recipientUID && recipientSocket) {
+        io.to(recipientUID).emit("increaseUnreadMessages");
+        io.to(recipientUID).emit("directMessage", {
+          message,
+          id,
+        });
+        recipientSocket.request.session.user.unreadMessages += 1;
+        recipientSocket.request.session.save();
+      }
     }
   });
 
@@ -139,11 +151,13 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("editConversation", ({ conversation, to }) => {
-    let recipientUID = users.get(to).id;
-    if (recipientUID) {
-      io.to(recipientUID).emit("editConversation", {
-        conversation,
-      });
+    if (users.has(to)) {
+      let recipientUID = users.get(to).id;
+      if (recipientUID) {
+        io.to(recipientUID).emit("editConversation", {
+          conversation,
+        });
+      }
     }
   });
 
@@ -152,9 +166,11 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("bringIntoGroup", ({ to, group }) => {
-    let recipientSocket = users.get(to).socket;
-    if (recipientSocket) {
-      recipientSocket.join("group:" + group.id);
+    if (users.has(to)) {
+      let recipientSocket = users.get(to).socket;
+      if (recipientSocket) {
+        recipientSocket.join("group:" + group.id);
+      }
     }
   });
 
