@@ -4,6 +4,7 @@ const { Server } = require("socket.io");
 const { sessionMiddleware, corsOptions } = require("./serverConfig");
 const DirectConversations = require("./models/directConversations");
 const GroupConversations = require("./models/groupConversations");
+const constructToastMessage = require("./helpers/constructToastMessage");
 
 const server = http.createServer(app);
 
@@ -56,6 +57,10 @@ io.on("connection", async (socket) => {
         io.to(recipientUID).emit("updateUnansweredRequests", {
           change: 1,
         });
+        io.to(recipientUID).emit("notify", {
+          from: "Icebreakers",
+          message: constructToastMessage(username, request, requestType, "add"),
+        });
         recipientSocket.request.session.user.unansweredRequests += 1;
         recipientSocket.request.session.save();
       }
@@ -74,6 +79,15 @@ io.on("connection", async (socket) => {
         });
         io.to(recipientUID).emit("updateUnansweredRequests", {
           change: -1,
+        });
+        io.to(recipientUID).emit("notify", {
+          from: "Icebreakers",
+          message: constructToastMessage(
+            username,
+            request,
+            requestType,
+            "remove"
+          ),
         });
         recipientSocket.request.session.user.unansweredRequests += -1;
         recipientSocket.request.session.save();
@@ -124,6 +138,21 @@ io.on("connection", async (socket) => {
           requestType,
           countType,
         });
+
+        let responseKey = response.accepted ? "accepted" : "declined";
+
+        io.to(recipientUID).emit("notify", {
+          from: "Icebreakers",
+          message: constructToastMessage(
+            username,
+            response,
+            requestType,
+            responseKey
+          ),
+        });
+
+        session.user.unansweredRequests += -1;
+        session.save();
       }
     }
   });
@@ -137,6 +166,10 @@ io.on("connection", async (socket) => {
         io.to(recipientUID).emit("directMessage", {
           message,
           id,
+        });
+        io.to(recipientUID).emit("notify", {
+          from: username,
+          message: message.content,
         });
         recipientSocket.request.session.user.unreadMessages += 1;
         recipientSocket.request.session.save();
