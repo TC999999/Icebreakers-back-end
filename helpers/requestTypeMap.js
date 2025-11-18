@@ -1,3 +1,5 @@
+// hashmap of messages for client-side toast notifications to send when db updates occur for
+// requests/invitations tables
 const messageTemplate = new Map([
   [
     "direct-requests-received",

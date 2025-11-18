@@ -11,7 +11,7 @@ class GroupConversations {
       `SELECT 
         username 
       FROM 
-        user_to_group_conversations 
+        users_to_group_conversations 
       WHERE 
         username=$1 
       AND 
@@ -29,7 +29,7 @@ class GroupConversations {
       `SELECT 
         username 
       FROM 
-        user_to_group_conversations 
+        users_to_group_conversations 
       WHERE 
         username=$1 
       AND 
@@ -45,7 +45,7 @@ class GroupConversations {
 
   static async addNewUser(username, group_conversation_id) {
     await db.query(
-      `INSERT INTO user_to_group_conversations
+      `INSERT INTO users_to_group_conversations
             (username,
             group_conversation_id)
         VALUES ($1, $2)`,
@@ -69,7 +69,7 @@ class GroupConversations {
 
   static async addMultipleUsers(users, group_conversation_id) {
     await db.query(
-      `INSERT INTO user_to_group_conversations
+      `INSERT INTO users_to_group_conversations
             (username,
             group_conversation_id)
         VALUES ${insertMultipleUsers(users, group_conversation_id)}`
@@ -146,7 +146,7 @@ class GroupConversations {
             FROM 
               users AS u 
             JOIN 
-              user_to_group_conversations AS ugc 
+              users_to_group_conversations AS ugc 
             ON 
               u.username=ugc.username 
             WHERE 
@@ -173,7 +173,7 @@ class GroupConversations {
       SELECT 
         JSON_AGG(ugc.group_conversation_id) AS groups 
       FROM 
-        user_to_group_conversations AS ugc 
+        users_to_group_conversations AS ugc 
       WHERE 
         username=$1 
       GROUP BY 
@@ -209,7 +209,7 @@ class GroupConversations {
         FROM 
           group_conversations AS gc 
         JOIN 
-          user_to_group_conversations AS ugc 
+          users_to_group_conversations AS ugc 
         ON 
           gc.id=ugc.group_conversation_id 
         WHERE 
@@ -228,7 +228,7 @@ class GroupConversations {
       FROM 
         group_conversations AS gc 
       JOIN 
-        user_to_group_conversations AS ugc 
+        users_to_group_conversations AS ugc 
       ON 
         gc.id=ugc.group_conversation_id 
       WHERE 
@@ -282,7 +282,7 @@ class GroupConversations {
         FROM 
           users AS u 
         JOIN 
-          user_to_group_conversations AS ugc 
+          users_to_group_conversations AS ugc 
         ON 
           u.username=ugc.username 
         WHERE 

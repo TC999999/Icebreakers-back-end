@@ -84,20 +84,22 @@ const getGroup = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { getSimple } = req.query;
+
+    const username = req.session.user.username;
     if (getSimple === "true") {
       const group = await GroupConversations.getSimpleGroupInfo(id);
       return res.status(200).send({ group });
     } else {
-      const isInGroup = await GroupConversations.checkGroup(
-        req.session.user.username,
-        id
-      );
-      const requestPending = await GroupRequests.checkRequest(
+      const isInGroup = await GroupConversations.checkGroup(username, id);
+      const requestPending = await GroupRequests.checkRequest(id, username);
+      const invitationPending = await GroupRequests.checkInvitation(
         id,
-        req.session.user.username
+        username
       );
       const group = await GroupConversations.getGroupInfo(id);
-      return res.status(200).send({ group, isInGroup, requestPending });
+      return res
+        .status(200)
+        .send({ group, isInGroup, requestPending, invitationPending });
     }
   } catch (err) {
     return next(err);

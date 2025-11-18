@@ -6,6 +6,8 @@ const createInvitation = async (req, res, next) => {
   try {
     const { from, to, content, group } = req.body;
     await GroupRequests.checkGroup(group, to);
+    await GroupRequests.checkRequest(group, to, true);
+    await GroupRequests.checkInvitation(group, to, true);
 
     const invitation = await GroupRequests.createInvitation(
       from,
@@ -56,9 +58,8 @@ const createGroupRequest = async (req, res, next) => {
     const { content } = req.body;
 
     await GroupRequests.checkGroup(id, username);
-
-    if (await GroupRequests.checkRequest(id, username))
-      throw new ForbiddenError(`${username} request is already pending`);
+    await GroupRequests.checkRequest(id, username, true);
+    await GroupRequests.checkInvitation(id, username, true);
 
     const request = await GroupRequests.createRequest(username, content, id);
 

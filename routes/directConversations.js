@@ -9,7 +9,7 @@ const { ensureCorrectUser } = require("../middleware/auth");
 
 const router = express.Router();
 
-router.get("/conversations/:username", ensureCorrectUser, getAllConversations);
+router.get("/:username/conversation", ensureCorrectUser, getAllConversations);
 
 router.post(
   "/:username/conversation/:id/message",
@@ -18,7 +18,7 @@ router.post(
 );
 
 router.get(
-  "/:username/conversation/:id/messages",
+  "/:username/conversation/:id/message",
   ensureCorrectUser,
   getConversationMessages
 );

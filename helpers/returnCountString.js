@@ -1,3 +1,5 @@
+// hashmap of request inbox keys and table filter parameters as values for retrieving the total number of
+// requests for a single user
 const tableAsMap = new Map([
   [
     "receivedDirectRequestCount",
@@ -76,6 +78,7 @@ const tableAsMap = new Map([
   ],
 ]);
 
+// constructs count string using above hashmap and input parameters
 const returnCountString = (queryFor, as = true) => {
   return `
     (SELECT 

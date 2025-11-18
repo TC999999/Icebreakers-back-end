@@ -1,18 +1,21 @@
 const DirectRequests = require("../models/directRequests");
 const DirectConversations = require("../models/directConversations");
 
+// adds a new request to the direct requests table using data sent from the client-side and then sends the
+// new request data back to the client side
 const makeRequest = async (req, res, next) => {
   try {
     const { to, from, content } = req.body;
     const request = await DirectRequests.makeRequest(to, from, content);
-    // const { unansweredRequests } =
-    //   await DirectRequests.getUnansweredRequestCount(requestedUser);
     return res.status(201).send({ request });
   } catch (err) {
     return next(err);
   }
 };
 
+// deletes the correct direct request from the respective table and if the receiving user accepted the
+// request, creates a new direct conversation in the database and returns the new conversation data to
+// the client-side
 const respondToRequest = async (req, res, next) => {
   try {
     const { id, to, from, accepted } = req.body;
@@ -43,6 +46,8 @@ const respondToRequest = async (req, res, next) => {
   }
 };
 
+// checks if two users already have a direct conversation between them; used for profile pages so users
+// don't make duplicate requests
 const checkConversationExists = async (req, res, next) => {
   try {
     const { username, username2 } = req.params;
@@ -56,6 +61,7 @@ const checkConversationExists = async (req, res, next) => {
   }
 };
 
+// updates a direct request so the recipient user is no longer able to view this request
 const removeRequest = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -68,20 +74,9 @@ const removeRequest = async (req, res, next) => {
   }
 };
 
-const getDirectMessageRequests = async (req, res, next) => {
-  try {
-    const { username } = req.params;
-    const requests = await DirectRequests.getDirectMessageRequests(username);
-    return res.status(200).send({ requests });
-  } catch (err) {
-    return next(err);
-  }
-};
-
 module.exports = {
   checkConversationExists,
   removeRequest,
-  getDirectMessageRequests,
   makeRequest,
   respondToRequest,
 };

@@ -5,7 +5,6 @@ const {
 } = require("../controllers/requests");
 const {
   removeRequest,
-  getDirectMessageRequests,
   makeRequest,
   respondToRequest,
 } = require("../controllers/directRequests");
@@ -39,8 +38,6 @@ router.post(
   ensureCorrectUserForRequest,
   makeRequest
 );
-
-router.get("/direct/:username", ensureCorrectUser, getDirectMessageRequests);
 
 router.patch("/direct/update/:id", ensureLoggedIn, removeRequest);
 

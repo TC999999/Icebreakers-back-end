@@ -74,11 +74,11 @@ class User {
         FROM
             group_conversations
         JOIN
-            user_to_group_conversations
+            users_to_group_conversations
         ON
-            group_conversations.id=user_to_group_conversations.id
+            group_conversations.id=users_to_group_conversations.id
         WHERE
-            user_to_group_conversations.username=$1`,
+            users_to_group_conversations.username=$1`,
       [username]
     );
 
@@ -202,8 +202,10 @@ class User {
       FROM 
         users 
       WHERE
-        email_address=$1`,
-      [emailAddress]
+        email_address=$1
+      AND
+        username!=$2`,
+      [emailAddress, username]
     );
 
     if (emailCheck.rows[0]) {

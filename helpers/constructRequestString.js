@@ -145,6 +145,7 @@ const getParams = (params) => {
   return `WHERE ${usernameParam} AND ${isRemoved}=${params.type === "removed"}`;
 };
 
+// constructs full query string for retrieving correct list of requests
 const constructSearchString = (params) => {
   const selectors = getSelectors(params);
   const table = getTableName(params);

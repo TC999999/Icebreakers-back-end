@@ -8,7 +8,7 @@ class GroupRequests {
       SELECT 
         username
       FROM 
-        user_to_group_conversations 
+        users_to_group_conversations 
       WHERE 
         group_conversation_id=$1 
       AND 
@@ -21,7 +21,27 @@ class GroupRequests {
     }
   }
 
-  static async checkRequest(id, username) {
+  static async checkInvitation(id, username, returnError = false) {
+    const res = await db.query(
+      `
+      SELECT 
+        id
+      FROM 
+        group_conversation_invitations
+      WHERE
+        group_conversation_id=$1 AND invited_user=$2`,
+      [id, username]
+    );
+    if (returnError && res.rows[0]) {
+      throw new ForbiddenError(
+        `${username} has already received an invitation to join this group!`
+      );
+    }
+
+    return res.rows.length > 0;
+  }
+
+  static async checkRequest(id, username, returnError = false) {
     const res = await db.query(
       `
     SELECT 
@@ -33,10 +53,19 @@ class GroupRequests {
       [id, username]
     );
 
+    if (returnError && res.rows[0]) {
+      throw new ForbiddenError(
+        `${username} has already sent a request to join this group!`
+      );
+    }
+
     return res.rows.length > 0;
   }
 
   static async createRequest(from, content, group) {
+    await this.checkRequest(group, from, true);
+    await this.checkInvitation(group, from, true);
+
     const r = await db.query(
       `INSERT INTO
         group_conversation_requests
@@ -141,6 +170,9 @@ class GroupRequests {
   }
 
   static async createInvitation(from, to, content, group) {
+    await this.checkRequest(group, to, true);
+    await this.checkInvitation(group, to, true);
+
     const i = await db.query(
       `INSERT INTO 
         group_conversation_invitations 
@@ -179,7 +211,7 @@ class GroupRequests {
   }
 
   static async removeInvitation(remove, id) {
-    const i = await db.query(
+    await db.query(
       `UPDATE 
           group_conversation_invitations
         SET 

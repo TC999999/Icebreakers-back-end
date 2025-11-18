@@ -119,61 +119,6 @@ class DirectRequests {
     return res.rows[0];
   }
 
-  static async getDirectMessageRequests(username) {
-    const sentRequests = await db.query(
-      `SELECT
-            id,
-            requested_user AS "requestedUser",
-            content,
-            created_at AS "createdAt"
-        FROM
-            direct_conversation_requests
-        WHERE
-            requester_user=$1
-        AND
-            is_removed=false`,
-      [username]
-    );
-
-    const sentRequestList = sentRequests.rows;
-
-    const removedRequests = await db.query(
-      `SELECT
-            id,
-            requested_user AS "requestedUser",
-            content,
-            created_at AS "createdAt"
-        FROM
-            direct_conversation_requests
-        WHERE
-            requester_user=$1
-        AND
-            is_removed=true`,
-      [username]
-    );
-
-    const removedRequestList = removedRequests.rows;
-
-    const receivedRequests = await db.query(
-      `SELECT
-            id,
-            requester_user AS "requesterUser",
-            content,
-            created_at AS "createdAt"
-        FROM
-            direct_conversation_requests
-        WHERE
-            requested_user=$1
-        AND 
-            is_removed=false`,
-      [username]
-    );
-
-    const receivedRequestList = receivedRequests.rows;
-
-    return { sentRequestList, receivedRequestList, removedRequestList };
-  }
-
   static async removeRequest(remove, id) {
     const res = await db.query(
       `UPDATE 

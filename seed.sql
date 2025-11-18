@@ -110,7 +110,7 @@ CREATE TABLE group_conversations_messages(
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE user_to_group_conversations(
+CREATE TABLE users_to_group_conversations(
     username VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
     group_conversation_id UUID NOT NULL REFERENCES group_conversations ON DELETE CASCADE, 
     unread_messages INTEGER NOT NULL DEFAULT 0,

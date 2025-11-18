@@ -29,6 +29,26 @@ class DirectConversations {
   }
 
   static async createNewMessage(content, username, id) {
+    const conversationCheck = await db.query(
+      `SELECT
+        username,
+        direct_conversation_id
+      FROM
+        users_to_direct_conversations
+      WHERE
+        username=$1
+      AND
+        direct_conversation_id=$2
+      `,
+      [username, id]
+    );
+
+    if (!conversationCheck.rows[0]) {
+      throw new UnauthorizedError(
+        "Cannot add message to a conversation that you are not a part of!"
+      );
+    }
+
     const messageRes = await db.query(
       `INSERT INTO direct_conversations_messages
             (content,

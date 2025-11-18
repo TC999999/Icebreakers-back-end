@@ -3,6 +3,8 @@ const DirectConversations = require("../models/directConversations");
 const Requests = require("../models/requests");
 const Interests = require("../models/interests");
 
+// receives new user data from client-side, adds new user data to users table, adds interests to one-to-many
+// interests to users table, sets data in user express session, and returns user data to client-side
 const registerUser = async (req, res, next) => {
   try {
     let {
@@ -41,6 +43,9 @@ const registerUser = async (req, res, next) => {
   }
 };
 
+// receives username and password data from client-side and retrieves correct user data from users table,
+// counts the total number of unread messages and requests the user has, sets data in user express session,
+// and returns user data to client-side
 const logInUser = async (req, res, next) => {
   try {
     let { username, password } = req.body;
@@ -74,6 +79,7 @@ const logInUser = async (req, res, next) => {
   }
 };
 
+// checks if user data exists in express session
 const getCurrentUser = async (req, res, next) => {
   try {
     let user;
@@ -88,6 +94,7 @@ const getCurrentUser = async (req, res, next) => {
   }
 };
 
+// removes user data from express session upon logout
 const logOutUser = async (req, res, next) => {
   req.session.destroy((err) => {
     if (err) {
