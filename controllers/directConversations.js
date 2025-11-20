@@ -15,10 +15,12 @@ const getAllConversations = async (req, res, next) => {
 };
 
 // creates a new message made by single user that belongs to a single direct conversation and returns it
-// to the client-side
+// to the client-side; throws error if conversation does not exist or user is not involved in conversation
 const createNewMessage = async (req, res, next) => {
   try {
     const { username, id } = req.params;
+    await DirectConversations.conversationExists(id);
+    await DirectConversations.userConversationCheck(id, username);
     const { content } = req.body;
     const { message, otherUser } = await DirectConversations.createNewMessage(
       content,
@@ -34,10 +36,13 @@ const createNewMessage = async (req, res, next) => {
 
 // retrieves a list of all messages that belong to a single direct conversation that the current user
 // is a part of as well as the other user in the conversation and returns it to the client-side;
-// additionally, if the user has unread messages, then the count is cleared for that conversation alone
+// additionally, if the user has unread messages, then the count is cleared for that conversation alone;
+// throws error if conversation does not exist or user is not involved in conversation
 const getConversationMessages = async (req, res, next) => {
   try {
     const { username, id } = req.params;
+    await DirectConversations.conversationExists(id);
+    await DirectConversations.userConversationCheck(id, username);
     const { unreadMessages } = req.query;
     const messages = await DirectConversations.getMessages(id);
     const conversationData = await DirectConversations.getOtherConversationUser(
@@ -53,14 +58,16 @@ const getConversationMessages = async (req, res, next) => {
   }
 };
 
-// updates a direct conversation title that the current user is a part of and returns the updated conversation
-// data to the client-side
+// updates a direct conversation title that the current user is a part of and returns the updated
+// conversation data to the client-side; throws error if conversation does not exist or user is
+// not involved in conversation
 const editConversation = async (req, res, next) => {
   try {
     const { username, id } = req.params;
+    await DirectConversations.conversationExists(id);
+    await DirectConversations.userConversationCheck(id, username);
     const { title } = req.body;
     const updatedConversation = await DirectConversations.editConversation(
-      username,
       id,
       title
     );

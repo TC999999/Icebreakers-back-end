@@ -42,7 +42,8 @@ const groupRequestsUsernameParams = new Map([
   ["received", "gc.host_user=$1"],
 ]);
 
-// get selectors for either group invitations or requests
+// constructs the column selector portion of a sql select query string for either group invitations or
+// group requests
 const getGroupSelectors = (requestOrInvitation, type) => {
   const as = requestOrInvitation === "invitations" ? "i" : "r";
   let selectors = `${as}.id, ${as}.content, ${as}.created_at AS "createdAt", `;
@@ -61,7 +62,8 @@ const getGroupSelectors = (requestOrInvitation, type) => {
   return selectors + otherUser;
 };
 
-// get selectors and labels
+// constructs the column selector portion of a sql select query string for either direct requests,
+// group invitations or group requests
 const getSelectors = (params) => {
   switch (params.directOrGroup) {
     case "direct":
@@ -78,7 +80,7 @@ const getSelectors = (params) => {
   }
 };
 
-//constructs correct join statement for query string
+//constructs correct join portion of the sql select request query string
 const getJoinStatement = (params) => {
   let joinStatement = "";
 
@@ -91,7 +93,7 @@ const getJoinStatement = (params) => {
   return joinStatement;
 };
 
-// get the name of the table to retrieve data from
+// constructs the table name and "AS" statement for a SQL select statement
 const getTableName = (params) => {
   let asName = "";
   if (params.directOrGroup === "group") {
@@ -110,7 +112,7 @@ const getTableName = (params) => {
   return initialString + asName + getJoinStatement(params);
 };
 
-// get correct username paramter for group requests or invitation
+// get correct username parameter for group requests or invitation from the above hashmaps
 const getGroupUsernameParams = (requestOrInvitation, type) => {
   switch (requestOrInvitation) {
     case "requests":
@@ -121,7 +123,7 @@ const getGroupUsernameParams = (requestOrInvitation, type) => {
   }
 };
 
-// get parameters for query string
+// constructs the correct "WHERE" statement for an SQL query string
 const getParams = (params) => {
   let usernameParam;
   let isRemoved = "is_removed";
@@ -145,7 +147,8 @@ const getParams = (params) => {
   return `WHERE ${usernameParam} AND ${isRemoved}=${params.type === "removed"}`;
 };
 
-// constructs full query string for retrieving correct list of requests
+// constructs full select query string for retrieving a list of requests from the correct table
+// while filtering out unneeded requests
 const constructSearchString = (params) => {
   const selectors = getSelectors(params);
   const table = getTableName(params);

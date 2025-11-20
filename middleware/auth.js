@@ -1,6 +1,7 @@
 const { UnauthorizedError, UnacceptableError } = require("../expressError");
 const DirectRequests = require("../models/directRequests");
 
+// middleware that ensures that the user cannot access a route without first being logged in
 function ensureLoggedIn(req, res, next) {
   try {
     if (!req.session.user) {
@@ -12,6 +13,8 @@ function ensureLoggedIn(req, res, next) {
   }
 }
 
+// middleware that ensures that the user cannot access a route if the username in express session
+// does not match the username in the url parameters
 function ensureCorrectUser(req, res, next) {
   try {
     if (
@@ -26,6 +29,8 @@ function ensureCorrectUser(req, res, next) {
   }
 }
 
+// middleware that ensures that the user cannot make a chat request or send a group invitation for
+// another user
 function ensureCorrectUserForRequest(req, res, next) {
   try {
     if (!req.session.user || req.body.from !== req.session.user.username) {
@@ -37,18 +42,7 @@ function ensureCorrectUserForRequest(req, res, next) {
   }
 }
 
-async function checkRequestAuth(req, res, next) {
-  try {
-    let check = await DirectRequests.getRequestById(req.params.id);
-    if (!check || check.from !== req.session.user.username) {
-      throw new UnauthorizedError("Cannot change a request for another user!");
-    }
-    return next();
-  } catch (err) {
-    return next(err);
-  }
-}
-
+// middleware that ensures that the user cannot respond a chat request or group invitation for another user
 function ensureCorrectUserForReponse(req, res, next) {
   try {
     if (!req.session.user || req.body.to !== req.session.user.username) {
@@ -65,7 +59,6 @@ function ensureCorrectUserForReponse(req, res, next) {
 module.exports = {
   ensureLoggedIn,
   ensureCorrectUser,
-  checkRequestAuth,
   ensureCorrectUserForRequest,
   ensureCorrectUserForReponse,
 };

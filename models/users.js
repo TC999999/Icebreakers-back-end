@@ -42,7 +42,12 @@ class User {
     if (user) {
       user = {
         ...user,
-        requestSent: await DirectRequests.checkRequests(username, currentUser),
+        requestSent: await DirectRequests.checkRequests(
+          username,
+          currentUser,
+          false,
+          true
+        ),
       };
 
       return user;

@@ -3,6 +3,7 @@ const Interests = require("../models/interests");
 const DirectRequests = require("../models/directRequests");
 const { ForbiddenError } = require("../expressError");
 
+// checks database if a direct conversation between two users already exists
 const userCheck = async (req, res, next) => {
   try {
     const { username } = req.params;
@@ -24,6 +25,8 @@ const userCheck = async (req, res, next) => {
   }
 };
 
+// retrieves data about a single user from database and returns it to the client-side; additionally, returns
+// all of that user's interests andwhether a conversation exists between the current user and the other user
 const getUserProfile = async (req, res, next) => {
   try {
     const { username } = req.params;
@@ -44,6 +47,7 @@ const getUserProfile = async (req, res, next) => {
   }
 };
 
+// returns a list of all users and their information except for the current user saved in express session
 const getAllUsers = async (req, res, next) => {
   try {
     const users = await User.getAllUsers(req.session.user.username);
@@ -53,6 +57,9 @@ const getAllUsers = async (req, res, next) => {
   }
 };
 
+// returns a filtered list of users based on the search query parameters in the request; if the
+// findSimilarInterests parameter is in the body, also retrieves a list of the current user's interests
+// and filters out users with no similar interests to their own
 const searchForUsers = async (req, res, next) => {
   try {
     const { username, findSimilarInterests } = req.query;
@@ -71,6 +78,8 @@ const searchForUsers = async (req, res, next) => {
   }
 };
 
+// retrieves a single user's information that will be edited on the client-side, including their email address,
+// biography, and interest list
 const getUserForEdit = async (req, res, next) => {
   try {
     const { username } = req.params;
@@ -82,6 +91,8 @@ const getUserForEdit = async (req, res, next) => {
   }
 };
 
+// updates a user's profile information in the database and returns their new favorite color to update their
+// user profile button styling on the client-side
 const editUser = async (req, res, next) => {
   try {
     const { username } = req.params;

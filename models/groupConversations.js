@@ -1,48 +1,49 @@
 const db = require("../db");
-const { UnauthorizedError } = require("../expressError");
+const { ForbiddenError } = require("../expressError");
 const {
   constructGroupSearchString,
 } = require("../helpers/constructSearchString");
 const { insertMultipleUsers } = require("../helpers/insertMultipleSQL");
 
+// class of static functions that handle the database logic for the group conversations table and users to
+// group conversations table
 class GroupConversations {
-  static async checkGroupError(username, id) {
+  // finds a single row in the users to group conversations table that contains the inputted group id and
+  // username and returns something different depending on optional parameters; if inGroupProfile is true,
+  // simply returns if row exists, used for checking on client side group page if current user is a member
+  // of the group; if we want to know if the user is in the group but they are not found OR if we want to
+  // know if the user is not in the group but they are found, throws an error
+  static async checkGroup(
+    id,
+    username,
+    inGroupProfile = false,
+    isInGroup = false
+  ) {
     const res = await db.query(
-      `SELECT 
-        username 
+      `
+      SELECT 
+        username
       FROM 
         users_to_group_conversations 
       WHERE 
-        username=$1 
+        group_conversation_id=$1 
       AND 
-        group_conversation_id=$2`,
-      [username, id]
+        username=$2`,
+      [id, username]
     );
-
-    if (!res.rows[0]) {
-      throw new UnauthorizedError("NOT a part of this group!");
+    if (inGroupProfile) {
+      return res.rows[0] !== undefined;
+    } else if (!inGroupProfile && !res.rows[0] && isInGroup) {
+      throw new ForbiddenError(
+        `You cannot make an invitation for a group you are not a part of`
+      );
+    } else if (!inGroupProfile && res.rows[0] && !isInGroup) {
+      throw new ForbiddenError(`${to} is already in this group`);
     }
   }
 
-  static async checkGroup(username, id) {
-    const res = await db.query(
-      `SELECT 
-        username 
-      FROM 
-        users_to_group_conversations 
-      WHERE 
-        username=$1 
-      AND 
-        group_conversation_id=$2`,
-      [username, id]
-    );
-
-    if (!res.rows[0]) {
-      return false;
-    }
-    return true;
-  }
-
+  // adds new row to users to group table with the inputted username and group conversation ID; returns
+  // both the new username and their favorite color to be used in a socket emitter
   static async addNewUser(username, group_conversation_id) {
     await db.query(
       `INSERT INTO users_to_group_conversations
@@ -67,15 +68,8 @@ class GroupConversations {
     return res.rows[0];
   }
 
-  static async addMultipleUsers(users, group_conversation_id) {
-    await db.query(
-      `INSERT INTO users_to_group_conversations
-            (username,
-            group_conversation_id)
-        VALUES ${insertMultipleUsers(users, group_conversation_id)}`
-    );
-  }
-
+  // adds and returns a new row to the group conversations table with the inputted title, host username, and
+  // description string
   static async createNewConversation(title, host, description) {
     const res = await db.query(
       `INSERT INTO group_conversations
@@ -94,6 +88,8 @@ class GroupConversations {
     return res.rows[0];
   }
 
+  // returns a list of titles and host usernames from all rows in the group conversations table; to be used
+  // for dropdown search results
   static async getAllGroupNames() {
     const res = await db.query(
       `
@@ -107,6 +103,8 @@ class GroupConversations {
     return res.rows;
   }
 
+  // returns a filtered list of group information based on the input parameters seen below; used for group
+  // search results
   static async searchGroups(username, title, host, user, interests, newGroups) {
     const { filterString, values } = constructGroupSearchString(
       username,
@@ -167,6 +165,8 @@ class GroupConversations {
     return res.rows;
   }
 
+  // returns an array of group ids from all rows in the users to group conversations table that contain the
+  // inputted username; to be used for a user joining their socket rooms upon connection
   static async getAllGroupsSocket(username) {
     const res = await db.query(
       `
@@ -184,6 +184,8 @@ class GroupConversations {
     return res.rows[0] ? res.rows[0].groups : [];
   }
 
+  // returns two lists from the group conversations table: one with groups where the host user matches the
+  // inputted username, and one where they don't match
   static async getAllGroups(username) {
     const res = await db.query(
       `SELECT 
@@ -220,6 +222,8 @@ class GroupConversations {
     return res.rows[0];
   }
 
+  // returns a simpler list of rows from the group conversations table joined with the users to group
+  // conversations where the usernames match; used for inviting another user into a group
   static async getAllGroupsSingleList(username) {
     const res = await db.query(
       `SELECT 
@@ -238,6 +242,8 @@ class GroupConversations {
     return res.rows;
   }
 
+  // returns a smaller amount of data about a single row from the group conversations table where the ids
+  // match; used for requesting to join a new group
   static async getSimpleGroupInfo(id) {
     const res = await db.query(
       `SELECT
@@ -253,6 +259,8 @@ class GroupConversations {
     return res.rows[0];
   }
 
+  // returns a single row grom the group conversations table that has the matching id; also gets a list of
+  // users in that group and the interests that group has
   static async getGroupInfo(id) {
     const res = await db.query(
       `SELECT 

@@ -1,5 +1,7 @@
 const AllRequests = require("../models/requests");
 
+// returns a map that with request type strings as keys and a total count of that type of request
+// for a single user as keys from database
 const getAllRequestCount = async (req, res, next) => {
   try {
     const { username } = req.params;
@@ -12,6 +14,7 @@ const getAllRequestCount = async (req, res, next) => {
   }
 };
 
+// returns a filtered list of all requests a user has based on the request query params from database
 const getAllRequests = async (req, res, next) => {
   try {
     const { username } = req.params;

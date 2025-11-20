@@ -60,6 +60,7 @@ io.on("connection", async (socket) => {
         io.to(recipientUID).emit("notify", {
           from: "Icebreakers",
           message: constructToastMessage(username, request, requestType, "add"),
+          pathname: "/requests",
         });
         recipientSocket.request.session.user.unansweredRequests += 1;
         recipientSocket.request.session.save();
@@ -88,6 +89,7 @@ io.on("connection", async (socket) => {
             requestType,
             "remove"
           ),
+          pathname: "",
         });
         recipientSocket.request.session.user.unansweredRequests += -1;
         recipientSocket.request.session.save();
@@ -149,6 +151,7 @@ io.on("connection", async (socket) => {
             requestType,
             responseKey
           ),
+          pathname: "",
         });
 
         session.user.unansweredRequests += -1;
@@ -170,6 +173,7 @@ io.on("connection", async (socket) => {
         io.to(recipientUID).emit("notify", {
           from: username,
           message: message.content,
+          pathname: "/conversations",
         });
         recipientSocket.request.session.user.unreadMessages += 1;
         recipientSocket.request.session.save();

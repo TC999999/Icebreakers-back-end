@@ -5,7 +5,9 @@ const DirectConversations = require("../models/directConversations");
 // new request data back to the client side
 const makeRequest = async (req, res, next) => {
   try {
-    const { to, from, content } = req.body;
+    const { from, to, content } = req.body;
+    await DirectRequests.checkRequests(from, to, true);
+    await DirectRequests.checkConversationExists(from, to, true);
     const request = await DirectRequests.makeRequest(to, from, content);
     return res.status(201).send({ request });
   } catch (err) {
@@ -13,14 +15,33 @@ const makeRequest = async (req, res, next) => {
   }
 };
 
+// updates a direct request so the recipient user is either no longer able to view this request or is
+// able to see it again and return the request to the client side; throws an error if user is not involved
+// in the request
+const removeRequest = async (req, res, next) => {
+  try {
+    const { id, username } = req.params;
+    await DirectRequests.checkUserToDirectRequest(id, username, true);
+    const { remove } = req.body;
+
+    const request = await DirectRequests.removeRequest(remove, id);
+
+    return res.status(200).send({ request });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 // deletes the correct direct request from the respective table and if the receiving user accepted the
 // request, creates a new direct conversation in the database and returns the new conversation data to
-// the client-side
+// the client-side; throws an error if user is not involved in the request
 const respondToRequest = async (req, res, next) => {
   try {
-    const { id, to, from, accepted } = req.body;
+    const { id, username } = req.params;
+    await DirectRequests.checkUserToDirectRequest(id, username);
+    const { to, from, accepted } = req.body;
 
-    await DirectRequests.respondToRequest(id, to, from);
+    await DirectRequests.deleteRequest(id, to, from);
 
     if (accepted) {
       const conversation = await DirectConversations.createNewConversation(
@@ -56,19 +77,6 @@ const checkConversationExists = async (req, res, next) => {
       username2
     );
     return res.status(200).send({ conversationExists });
-  } catch (err) {
-    return next(err);
-  }
-};
-
-// updates a direct request so the recipient user is no longer able to view this request
-const removeRequest = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { remove } = req.body;
-    const request = await DirectRequests.removeRequest(remove, id);
-
-    return res.status(200).send({ request });
   } catch (err) {
     return next(err);
   }

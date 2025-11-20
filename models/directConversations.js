@@ -1,7 +1,12 @@
 const db = require("../db");
-const { UnauthorizedError } = require("../expressError");
+const { UnauthorizedError, NotFoundError } = require("../expressError");
 
+// Direct Messages model: handles all postgresql queries that involve direct message conversations, including
+// creating a new conversation, creating a new message for an existing conversation, retrieving all conversations
+// a single user is a part of, and editing a conversation
 class DirectConversations {
+  // adds new row to direct conversations table and adds two rows to users to direct conversations for
+  // each user
   static async createNewConversation(user_1, user_2) {
     const res = await db.query(
       `INSERT INTO 
@@ -28,27 +33,44 @@ class DirectConversations {
     return conversation;
   }
 
-  static async createNewMessage(content, username, id) {
-    const conversationCheck = await db.query(
+  // checks if a conversation row with matching id exists in the direct conversations table;
+  // throws an error if it does not
+  static async conversationExists(id) {
+    const res = await db.query(
+      `SELECT id FROM direct_conversations WHERE id=$1`,
+      [id]
+    );
+
+    if (!res.rows[0]) {
+      throw new NotFoundError("Conversation does not exist!");
+    }
+  }
+
+  // checks if a user to direct conversation row with matching conversation id and username exist
+  // simultaneously in the users to direct conversations table; throws an error if it does not
+  static async userConversationCheck(id, username) {
+    const res = await db.query(
       `SELECT
         username,
         direct_conversation_id
       FROM
         users_to_direct_conversations
       WHERE
-        username=$1
+        direct_conversation_id=$1
       AND
-        direct_conversation_id=$2
+        username=$2
       `,
-      [username, id]
+      [id, username]
     );
 
-    if (!conversationCheck.rows[0]) {
-      throw new UnauthorizedError(
-        "Cannot add message to a conversation that you are not a part of!"
-      );
+    if (!res.rows[0]) {
+      throw new UnauthorizedError("You are not involved in this conversation!");
     }
+  }
 
+  // creates a new message in direct conversation messages table: adds the user who created the message and
+  // the conversation it was made for
+  static async createNewMessage(content, username, id) {
     const messageRes = await db.query(
       `INSERT INTO direct_conversations_messages
             (content,
@@ -92,6 +114,8 @@ class DirectConversations {
     return { message, otherUser };
   }
 
+  // returns a list of all conversations that a user is a part of, includes title, the other user, the
+  // total count of unread messages
   static async getAllConversations(username) {
     const res = await db.query(
       `SELECT 
@@ -137,6 +161,8 @@ class DirectConversations {
     return res.rows;
   }
 
+  // increases the saved number of unread messages a user has in a single user to direct conversation row
+  // by one
   static async updateUnreadMessages(id, username) {
     const res = await db.query(
       `UPDATE 
@@ -155,6 +181,7 @@ class DirectConversations {
     return res.rows[0];
   }
 
+  // reduces the saved number of unread messages a user has in a user to single direct conversation to zero
   static async clearUnreadMessages(id, username) {
     const res = await db.query(
       `UPDATE 
@@ -173,6 +200,7 @@ class DirectConversations {
     return res.rows[0];
   }
 
+  // retrieves all rows from messages table that have the same direct conversation id
   static async getMessages(id) {
     const res = await db.query(
       `SELECT
@@ -190,6 +218,8 @@ class DirectConversations {
     return res.rows;
   }
 
+  // retrives the row in user to direct conversations table that contains a specified direct conversation
+  // id and does not contain a specified username
   static async getOtherConversationUser(id, username) {
     const res = await db.query(
       `SELECT 
@@ -212,6 +242,8 @@ class DirectConversations {
     return res.rows[0];
   }
 
+  // sums the total number of unread messages in ever row in the user to direct conversations table that
+  // contains the specfied username
   static async getAllUnreadMessageCount(username) {
     const res = await db.query(
       `SELECT 
@@ -226,27 +258,9 @@ class DirectConversations {
     return res.rows[0];
   }
 
-  static async editConversation(username, id, title) {
-    const conversationCheck = await db.query(
-      `SELECT
-        username,
-        direct_conversation_id
-      FROM
-        users_to_direct_conversations
-      WHERE
-        username=$1
-      AND
-        direct_conversation_id=$2
-      `,
-      [username, id]
-    );
-
-    if (!conversationCheck.rows[0]) {
-      throw new UnauthorizedError(
-        "Cannot edit conversation that you are not a part of!"
-      );
-    }
-
+  // updates the title and updated at timestamp of a single row in the direct conversations table that
+  // contains a specified id
+  static async editConversation(id, title) {
     const res = await db.query(
       `UPDATE
         direct_conversations

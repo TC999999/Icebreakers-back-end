@@ -78,7 +78,8 @@ const tableAsMap = new Map([
   ],
 ]);
 
-// constructs count string using above hashmap and input parameters
+// constructs a sql query string to the total number of requests a user has for a particular category
+// using above hashmap and input parameters
 const returnCountString = (queryFor, as = true) => {
   return `
     (SELECT 

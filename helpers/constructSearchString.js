@@ -1,4 +1,4 @@
-// constructs postgresql query string to return filtered list users based on input parameters
+// constructs esql query string to return filtered list users based on input parameters
 const constructSearchString = (username = "", interests = []) => {
   let filterString = "";
   let values = [];
@@ -25,7 +25,7 @@ const constructSearchString = (username = "", interests = []) => {
   return { filterString, values };
 };
 
-// constructs postgresql query string to return filtered list groups based on input parameters
+// constructs sql query string to return filtered list groups based on input parameters
 const constructGroupSearchString = (
   username,
   title = "",

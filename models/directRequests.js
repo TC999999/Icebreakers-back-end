@@ -1,10 +1,23 @@
 const db = require("../db");
-const { NotFoundError, UnacceptableError } = require("../expressError");
+const {
+  NotFoundError,
+  UnacceptableError,
+  ForbiddenError,
+} = require("../expressError");
 
 class DirectRequests {
-  static async checkRequests(username1, username2) {
+  // checks the direct conversation requests table to see if there is a row in which either user has created
+  // a request to the other user; used to prevent duplicate requests; contains optional paramters for
+  // whether to throw an error or a boolean if request already exists or if the user is searching if a request
+  // is pending on the front end user profile page
+  static async checkRequests(
+    username1,
+    username2,
+    returnError = false,
+    forProfile = false
+  ) {
     if (username1 !== username2) {
-      const requestCheck = await db.query(
+      const res = await db.query(
         `SELECT 
             requested_user AS "requestedUser",
             requester_user AS "requesterUser"
@@ -21,11 +34,52 @@ class DirectRequests {
         [username1, username2]
       );
 
-      return requestCheck.rows[0] !== undefined;
+      if (returnError && res.rows[0]) {
+        throw new ForbiddenError(
+          "Request already exists! Please check your inbox!"
+        );
+      }
+
+      return res.rows[0] !== undefined;
+    }
+    if (!forProfile) {
+      throw new ForbiddenError("Cannot make a conversation with yourself");
     }
   }
 
-  static async checkConversationExists(username1, username2) {
+  // returns a matching row in the direct conversation requests where the inputted username matches the
+  // either the requester username or requested username and the uuid matches the inputted id; used to
+  // protect direct conversation requests from being edited by anybody other than the request's sender
+  // or responded to by anybody other than the request's recipient
+  static async checkUserToDirectRequest(id, username, sender = false) {
+    const res = await db.query(
+      `SELECT 
+            id
+        FROM
+            direct_conversation_requests
+        WHERE
+            id=$1
+        AND
+            ${sender ? "requester_user" : "requested_user"}=$2`,
+      [id, username]
+    );
+
+    if (!res.rows[0]) {
+      throw new ForbiddenError(
+        `You are not the ${sender ? "sender" : "recipient"} of this request`
+      );
+    }
+  }
+
+  // returns a count of the number of rows in the users to direct conversations table where two users have
+  // the same direct conversation id; if the returning rows have at least one value, then the users have
+  // a conversation between the two of them; used to prevent duplicate conversations; contains optional
+  // paramters for whether to throw an error or return a boolean if conversation already exists
+  static async checkConversationExists(
+    username1,
+    username2,
+    returnError = false
+  ) {
     const res = await db.query(
       `SELECT 
         COUNT(*) AS "conversationExists"
@@ -42,49 +96,17 @@ class DirectRequests {
       [username1, username2]
     );
 
+    if (returnError && res.rows[0]) {
+      throw new ForbiddenError(
+        "Conversation already exist between these two users!"
+      );
+    }
+
     return res.rows[0] !== undefined;
   }
 
-  static async getRequestById(id) {
-    const requestCheck = await db.query(
-      `SELECT 
-            requester_user AS "requesterUser"
-        FROM
-            direct_conversation_requests
-        WHERE
-            id=$1`,
-      [id]
-    );
-
-    return requestCheck.rows[0];
-  }
-
+  // adds a new row to direct requests table while inserting inputted fields
   static async makeRequest(to, from, content) {
-    if (to === from) {
-      throw new UnacceptableError("Cannot make conversation with yourself");
-    }
-
-    const doublesCheck = await db.query(
-      `SELECT 
-            requested_user AS "requestedUser",
-            requester_user AS "requesterUser"
-        FROM
-            direct_conversation_requests
-        WHERE
-            requested_user=$1 
-        AND
-            requester_user=$2
-        OR
-            requested_user=$2 
-        AND
-            requester_user=$1`,
-      [to, from]
-    );
-
-    if (doublesCheck.rows[0]) {
-      throw new UnacceptableError("Request has already been made");
-    }
-
     const res = await db.query(
       `INSERT INTO direct_conversation_requests
             (requested_user,
@@ -103,6 +125,8 @@ class DirectRequests {
     return res.rows[0];
   }
 
+  // returns the total number of rows in the direct requests table where the username matches the
+  // requested user column and and requests have not been removed
   static async getUnansweredRequestCount(username) {
     const res = await db.query(
       `SELECT 
@@ -119,6 +143,8 @@ class DirectRequests {
     return res.rows[0];
   }
 
+  // updates and returns a single row in the direct requests table; updates column that allows the recipient
+  // to be able to see request
   static async removeRequest(remove, id) {
     const res = await db.query(
       `UPDATE 
@@ -139,8 +165,10 @@ class DirectRequests {
     return res.rows[0];
   }
 
-  static async respondToRequest(id, to, from) {
-    const userCheck = await db.query(
+  // checks if a row in the direct requests table matches the inputted parameters; if there is none, throws
+  // an error, otherwise deletes the row
+  static async deleteRequest(id, to, from) {
+    const requestCheck = await db.query(
       `SELECT 
             id,
             requested_user,
@@ -156,7 +184,7 @@ class DirectRequests {
       [id, to, from]
     );
 
-    if (!userCheck.rows[0]) {
+    if (!requestCheck.rows[0]) {
       throw new NotFoundError("Request not found");
     }
 

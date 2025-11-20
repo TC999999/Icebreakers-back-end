@@ -3,7 +3,12 @@ const { UnauthorizedError, ForbiddenError } = require("../expressError");
 const { BCRYPT_WORK_FACTOR } = require("../config");
 const db = require("../db");
 
+// Authorization model: handles all postgresql queries that involve creating a new account or retrieving
+// an existing account
 class Authorization {
+  // creates a new user row in users table in db; throws an error if either inputted username or email
+  // address are used in a different row; uses bcrypt to encrypt password before saving it; returns new user
+  // information
   static async register({
     username,
     password,
@@ -60,6 +65,8 @@ class Authorization {
     return res.rows[0];
   }
 
+  // retrieves user information that match username and password provided; throws an error if either is
+  // incorrect
   static async logIn({ username, password }) {
     const res = await db.query(
       `SELECT 

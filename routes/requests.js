@@ -20,7 +20,6 @@ const {
   ensureCorrectUser,
   ensureCorrectUserForRequest,
   ensureCorrectUserForReponse,
-  ensureLoggedIn,
 } = require("../middleware/auth");
 
 const router = express.Router();
@@ -31,33 +30,57 @@ router.get("/:username", ensureCorrectUser, getAllRequests);
 router.get("/count/:username", ensureCorrectUser, getAllRequestCount);
 
 // direct conversation requests and responses
-router.post("/direct", ensureCorrectUserForRequest, makeRequest);
+// route for creating a new direct request
+router.post("/direct/new/:username", ensureCorrectUserForRequest, makeRequest);
 
+// route for updating an already existing request
+router.patch("/direct/update/:id/:username", ensureCorrectUser, removeRequest);
+
+// route for responding to a received request
 router.post(
-  "/direct/check/:username/with/:username2",
-  ensureCorrectUserForRequest,
-  makeRequest
+  "/direct/response/:id/:username",
+  ensureCorrectUser,
+  respondToRequest
 );
 
-router.patch("/direct/update/:id", ensureLoggedIn, removeRequest);
-
-router.post("/direct/response", ensureCorrectUserForReponse, respondToRequest);
-
 // group conversation requests
-router.post("/group/:id", ensureLoggedIn, createGroupRequest);
+router.post(
+  "/group/:id/new/:username",
+  ensureCorrectUserForRequest,
+  createGroupRequest
+);
 
-router.patch("/group/update/:id", ensureLoggedIn, removeGroupRequest);
-
-router.post("/group/new/response", ensureLoggedIn, respondToGroupRequest);
-
-// group conversation invitations
-router.post("/group/invitation/:username", ensureCorrectUser, createInvitation);
-
-router.patch("/group/invitation/update/:id", ensureLoggedIn, removeInvitation);
+router.patch(
+  "/group/update/:id/:username",
+  ensureCorrectUser,
+  removeGroupRequest
+);
 
 router.post(
-  "/group/invitation/new/response",
-  ensureCorrectUserForReponse,
+  "/group/response/:id/:username",
+  ensureCorrectUser,
+  respondToGroupRequest
+);
+
+// group conversation invitations
+// route to create new invitation for group with id
+router.post(
+  "/group/:id/invitation/new/:username",
+  ensureCorrectUserForRequest,
+  createInvitation
+);
+
+// route to update existing invitation for group with id
+router.patch(
+  "/group/invitation/update/:id/:username",
+  ensureCorrectUser,
+  removeInvitation
+);
+
+// route to update existing invitation for group with id
+router.post(
+  "/group/invitation/response/:id/:username",
+  ensureCorrectUser,
   respondToInvitation
 );
 

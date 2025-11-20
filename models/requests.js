@@ -2,13 +2,17 @@ const db = require("../db");
 const constructRequestString = require("../helpers/constructRequestString");
 const returnCountString = require("../helpers/returnCountString");
 
+// class of functions that handle retrieval of any request or invitation in the database
 class AllRequests {
+  // gets a list of filtered rows from either the direct requests table, group requests table, or group
+  // invitations table that contain the inputted username; filter depends on inputted parameters
   static async getAllRequests(username, params) {
     const res = await db.query(constructRequestString(params), [username]);
 
     return res.rows;
   }
 
+  // returns a total count of all rows from all requests/invitations tables
   static async getAllRequestCount(username) {
     const res = await db.query(
       `SELECT 
@@ -31,6 +35,8 @@ class AllRequests {
     }, {});
   }
 
+  // returns a total count of all rows of requests/invitations recieved by the user from all three
+  // requests/invitations tables
   static async getUnansweredRequestCount(username) {
     const res = await db.query(
       `

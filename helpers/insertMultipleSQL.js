@@ -1,4 +1,5 @@
-// used for adding interests: adds multiple interests to users rows in a postgresql query string
+// constructs the insert values portion of as sql query string used to adds multiple interests
+// to users rows
 const insertMultipleSQL = (username, topicIDArr) => {
   let returnStr = "";
 
