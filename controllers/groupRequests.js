@@ -6,17 +6,18 @@ const GroupRequests = require("../models/groupRequests");
 // to the client-side
 const createInvitation = async (req, res, next) => {
   try {
-    const { from, to, content, group } = req.body;
-    await GroupConversations.checkGroup(group, from, false, true);
-    await GroupConversations.checkGroup(group, to);
-    await GroupRequests.checkRequest(group, to, true);
-    await GroupRequests.checkInvitation(group, to, true);
+    const { id, username } = req.params;
+    const { to, content } = req.body;
+    await GroupConversations.checkGroup(id, username, false, true);
+    await GroupConversations.checkGroup(id, to);
+    await GroupRequests.checkRequest(id, to, true);
+    await GroupRequests.checkInvitation(id, to, true);
 
     const invitation = await GroupRequests.createInvitation(
-      from,
+      username,
       to,
       content,
-      group
+      id
     );
     return res.status(201).send({ invitation });
   } catch (err) {
@@ -43,15 +44,15 @@ const removeInvitation = async (req, res, next) => {
 const respondToInvitation = async (req, res, next) => {
   try {
     const { id, username } = req.params;
-    const { to, from, groupID, accepted } = req.body;
+    const { from, groupID, accepted } = req.body;
     await GroupRequests.checkUserToGroupInvitation(id, username);
 
-    await GroupRequests.deleteInvitation(id, to, from, groupID);
+    await GroupRequests.deleteInvitation(id, username, from, groupID);
     let message = "Invitation was declined";
     let user;
 
     if (accepted) {
-      user = await GroupConversations.addNewUser(to, groupID);
+      user = await GroupConversations.addNewUser(username, groupID);
       message = "Invitation was accepted";
     }
 

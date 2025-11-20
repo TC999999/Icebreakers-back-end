@@ -5,10 +5,11 @@ const DirectConversations = require("../models/directConversations");
 // new request data back to the client side
 const makeRequest = async (req, res, next) => {
   try {
-    const { from, to, content } = req.body;
-    await DirectRequests.checkRequests(from, to, true);
-    await DirectRequests.checkConversationExists(from, to, true);
-    const request = await DirectRequests.makeRequest(to, from, content);
+    const { username } = req.params;
+    const { to, content } = req.body;
+    await DirectRequests.checkRequests(username, to, true);
+    await DirectRequests.checkConversationExists(username, to, true);
+    const request = await DirectRequests.makeRequest(to, username, content);
     return res.status(201).send({ request });
   } catch (err) {
     return next(err);
@@ -32,6 +33,21 @@ const removeRequest = async (req, res, next) => {
   }
 };
 
+// deletes a direct request; throws an error if user is not involved in the request
+const deleteRequest = async (req, res, next) => {
+  try {
+    const { id, username } = req.params;
+    await DirectRequests.checkUserToDirectRequest(id, username, true);
+    const { to } = req.body;
+
+    const request = await DirectRequests.deleteRequest(id, to, username);
+
+    return res.status(200).send({ request });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 // deletes the correct direct request from the respective table and if the receiving user accepted the
 // request, creates a new direct conversation in the database and returns the new conversation data to
 // the client-side; throws an error if user is not involved in the request
@@ -39,13 +55,13 @@ const respondToRequest = async (req, res, next) => {
   try {
     const { id, username } = req.params;
     await DirectRequests.checkUserToDirectRequest(id, username);
-    const { to, from, accepted } = req.body;
+    const { from, accepted } = req.body;
 
-    await DirectRequests.deleteRequest(id, to, from);
+    await DirectRequests.deleteRequest(id, username, from);
 
     if (accepted) {
       const conversation = await DirectConversations.createNewConversation(
-        to,
+        username,
         from
       );
       return res.status(201).send({
@@ -84,7 +100,8 @@ const checkConversationExists = async (req, res, next) => {
 
 module.exports = {
   checkConversationExists,
-  removeRequest,
   makeRequest,
+  removeRequest,
+  deleteRequest,
   respondToRequest,
 };

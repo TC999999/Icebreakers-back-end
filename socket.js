@@ -60,7 +60,7 @@ io.on("connection", async (socket) => {
         io.to(recipientUID).emit("notify", {
           from: "Icebreakers",
           message: constructToastMessage(username, request, requestType, "add"),
-          pathname: "/requests",
+          pathname: "/request",
         });
         recipientSocket.request.session.user.unansweredRequests += 1;
         recipientSocket.request.session.save();

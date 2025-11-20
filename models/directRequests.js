@@ -192,8 +192,10 @@ class DirectRequests {
       `DELETE FROM
             direct_conversation_requests
           WHERE
-            id=$1`,
-      [id]
+            id=$1 
+          AND 
+            requester_user=$2`,
+      [id, from]
     );
   }
 }
