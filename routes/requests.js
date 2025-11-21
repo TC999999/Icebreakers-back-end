@@ -23,12 +23,12 @@ const { ensureCorrectUser } = require("../middleware/auth");
 
 const router = express.Router();
 
-// general requests
+// GENERAL REQUEST ROUTES
 router.get("/:username", ensureCorrectUser, getAllRequests);
 
 router.get("/count/:username", ensureCorrectUser, getAllRequestCount);
 
-// direct conversation requests and responses
+// DIRECT CONVERSATION REQUESTS
 // route for creating a new direct request
 router.post("/direct/new/:username", ensureCorrectUser, makeRequest);
 
@@ -45,9 +45,11 @@ router.post(
   respondToRequest
 );
 
-// group conversation requests
+// GROUP CONVERSATION REQUESTS
+// route for creating a new request for group with id
 router.post("/group/:id/new/:username", ensureCorrectUser, createGroupRequest);
 
+// route for updating an already existing group request
 router.patch(
   "/group/update/:id/:username",
   ensureCorrectUser,
@@ -61,13 +63,14 @@ router.delete(
   deleteGroupRequest
 );
 
+// route for responding to an already existing group request
 router.post(
   "/group/response/:id/:username",
   ensureCorrectUser,
   respondToGroupRequest
 );
 
-// group conversation invitations
+// GROUP CONVERSATION INVITATIONS
 // route to create new invitation for group with id
 router.post(
   "/group/:id/invitation/new/:username",
@@ -75,7 +78,7 @@ router.post(
   createInvitation
 );
 
-// route to update existing invitation for group with id
+// route for updating an already existing group invitation
 router.patch(
   "/group/invitation/update/:id/:username",
   ensureCorrectUser,
@@ -89,7 +92,7 @@ router.delete(
   deleteGroupInvitation
 );
 
-// route to update existing invitation for group with id
+// route for responding to an already existing group invitation
 router.post(
   "/group/invitation/response/:id/:username",
   ensureCorrectUser,

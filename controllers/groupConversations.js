@@ -8,17 +8,15 @@ const User = require("../models/users");
 // new group data to client-side
 const createNewConversation = async (req, res, next) => {
   try {
-    const { title, host, description, interests } = req.body;
+    const { username } = req.params;
+    const { title, description, interests } = req.body;
     const conversation = await GroupConversations.createNewConversation(
       title,
-      host,
+      username,
       description
     );
 
-    await GroupConversations.addNewUser(
-      req.session.user.username,
-      conversation.id
-    );
+    await GroupConversations.addNewUser(username, conversation.id);
 
     const newInterests = await Interests.addInterestsForGroup(
       conversation.id,

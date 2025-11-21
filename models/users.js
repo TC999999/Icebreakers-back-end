@@ -4,7 +4,10 @@ const { NotFoundError, ForbiddenError } = require("../expressError");
 const DirectRequests = require("./directRequests");
 const { insertMultipleSQL } = require("../helpers/insertMultipleSQL");
 
+// class of functions for CRUD operations to the users table in the database
 class User {
+  // finds and returns a single row in the users table where the inputted username matches the username
+  // column; throws an error if no row is found
   static async userCheck(username) {
     const res = await db.query(
       `SELECT 
@@ -24,7 +27,9 @@ class User {
     }
   }
 
-  static async getUserProfile(username, currentUser) {
+  // returns user's profile information from a single row in the user's table where the username column
+  // matches the inputted username; throws an error if user does not exist
+  static async getUserProfile(username) {
     const res = await db.query(
       `SELECT 
             username, 
@@ -40,56 +45,14 @@ class User {
 
     let user = res.rows[0];
     if (user) {
-      user = {
-        ...user,
-        requestSent: await DirectRequests.checkRequests(
-          username,
-          currentUser,
-          false,
-          true
-        ),
-      };
-
       return user;
     } else {
       throw new NotFoundError("User does not exist!");
     }
   }
 
-  static async getAllUserConversations(username) {
-    const directConversations = await db.query(
-      `SELECT 
-            id,
-            title,
-            created_at AS "createdAt"
-        FROM
-            direct_conversations
-        WHERE
-            user_1=$1
-        OR
-            user_2=$1`,
-      [username]
-    );
-
-    const groupConversations = await db.query(
-      `SELECT
-            group_conversations.id,
-            group_conversations.title,
-            group_conversations.created_at AS "createdAt"
-        FROM
-            group_conversations
-        JOIN
-            users_to_group_conversations
-        ON
-            group_conversations.id=users_to_group_conversations.id
-        WHERE
-            users_to_group_conversations.username=$1`,
-      [username]
-    );
-
-    return [...directConversations.rows, ...groupConversations.rows];
-  }
-
+  // retreives all rows from the users table except the row with the matching inputted username and returns
+  // it as an array of username strings
   static async getAllUsers(username) {
     const users = await db.query(
       `
@@ -107,6 +70,8 @@ class User {
     });
   }
 
+  // returns on all interests in the users to interests table where the username column value matches the
+  // inputted username if the findSimilarInterests value is truthy, otherwise return an empty array
   static async getSingleUserInterests(username, findSimilarInterests) {
     if (findSimilarInterests) {
       const res = await db.query(
@@ -133,6 +98,8 @@ class User {
     return [];
   }
 
+  // returns a list of all rows from the users table jojned with the interests table that have been
+  // filtered by the username and/or interests array parameters
   static async searchForUsers(currentUsername, username, interests) {
     const { filterString, values } = constructSearchString(username, interests);
 
@@ -166,6 +133,7 @@ class User {
     return users.rows;
   }
 
+  // selects and returns a single row of information from the users table to edit
   static async getUserForEdit(username) {
     const res = await db.query(
       `
@@ -194,6 +162,10 @@ class User {
     return res.rows[0];
   }
 
+  // updates and returns a single row in the users table with the inputted information that contains a
+  // matching username to the inputted username; throws an email if another user has already taken the
+  // inputted email address; also deletes all rows from the user's to interests table that contain the
+  // matching inputted username and replaces them with new interests
   static async editUser({
     username,
     emailAddress,

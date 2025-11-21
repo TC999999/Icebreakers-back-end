@@ -29,6 +29,7 @@ io.on("connection", async (socket) => {
   users.set(username, { id: socket.id, socket });
   console.log("*****User " + username + " Connected*****");
 
+  // broadcasts to all other users that the current user is online
   socket.broadcast.emit("isOnline", { user: username, isOnline: true });
 
   socket.on("isOnline", (user, callback) => {
@@ -44,6 +45,9 @@ io.on("connection", async (socket) => {
     })
   );
 
+  // when user emits "addRequest" signal, sends request, updated unanswered request count, and notification
+  // message to recipient user client side; also updates the unanswered request count in the recipient
+  // express session
   socket.on("addRequest", ({ requestType, countType, request, to }) => {
     if (users.has(to)) {
       let recipientUID = users.get(to).id;
@@ -68,6 +72,9 @@ io.on("connection", async (socket) => {
     }
   });
 
+  // when user emits "requestRequest" signal, sends request, updated unanswered request count, and
+  // notification message to recipient user client side; also updates the unanswered request count in
+  // the recipient express session
   socket.on("removeRequest", ({ requestType, countType, request, to }) => {
     if (users.has(to)) {
       let recipientUID = users.get(to).id;
@@ -97,16 +104,20 @@ io.on("connection", async (socket) => {
     }
   });
 
+  // updates the current user's favorite color in express session
   socket.on("updateFavoriteColor", ({ favoriteColor }) => {
     session.user.favoriteColor = favoriteColor;
     session.save();
   });
 
+  // reduces the current user's unread direct message count in express session
   socket.on("clearTotalUnreadMessages", ({ unreadMessages }) => {
     session.user.unreadMessages -= unreadMessages;
     session.save();
   });
 
+  // when user emits signal, sends information about whether the user is typing a message to the recipient
+  // user or not
   socket.on("isTyping", ({ otherUser, id, to, isTyping }) => {
     if (users.has(to)) {
       let recipientUID = users.get(to).id;
@@ -120,6 +131,8 @@ io.on("connection", async (socket) => {
     }
   });
 
+  // when user emits signal, sends new conversation to be added to recipient user's client side
+  // conversation list
   socket.on("addConversation", ({ conversation, to }) => {
     if (users.has(to)) {
       let recipientUID = users.get(to).id;
@@ -131,6 +144,9 @@ io.on("connection", async (socket) => {
     }
   });
 
+  // when user emits signal, sends both a signal to remove the request component from the recipient's request
+  // inbox and send them a notification about whether they accecpted the request; also updates user's
+  // unanswered requests count in session
   socket.on("response", ({ response, to, requestType, countType }) => {
     if (users.has(to)) {
       let recipientUID = users.get(to).id;
@@ -160,6 +176,9 @@ io.on("connection", async (socket) => {
     }
   });
 
+  // when user emits signal, increases recipients unread message count, sends message to be added to list
+  // of messages on client side, sends them a notification that they received a message, and increases
+  // recipient's unread message count in their express session
   socket.on("directMessage", ({ message, id, to }) => {
     if (users.has(to)) {
       let recipientUID = users.get(to).id;
@@ -181,12 +200,15 @@ io.on("connection", async (socket) => {
     }
   });
 
+  // decreases the current user's unread message count in express session and clears the total number of
+  // unread messages in the database
   socket.on("decreaseUnreadMessages", async ({ id }) => {
     await DirectConversations.clearUnreadMessages(id, session.user.username);
     session.user.unreadMessages -= 1;
     session.save();
   });
 
+  // when user emits signal, sends updated conversation data to recipient user
   socket.on("editConversation", ({ conversation, to }) => {
     if (users.has(to)) {
       let recipientUID = users.get(to).id;
@@ -198,10 +220,12 @@ io.on("connection", async (socket) => {
     }
   });
 
+  // lets current user join group socket room
   socket.on("joinGroup", ({ group }) => {
     socket.join("group:" + group.id);
   });
 
+  // lets current user bring another user into a group socket room
   socket.on("bringIntoGroup", ({ to, group }) => {
     if (users.has(to)) {
       let recipientSocket = users.get(to).socket;
@@ -211,6 +235,7 @@ io.on("connection", async (socket) => {
     }
   });
 
+  // when user emits signal, adds new user info to all group members' client side group user list
   socket.on("addUserToGroup", ({ groupID, user }) => {
     socket.to("group:" + groupID).emit("addUserToGroup", {
       groupID,
@@ -218,6 +243,8 @@ io.on("connection", async (socket) => {
     });
   });
 
+  // when a user disconnects from socket, removes their data from users map, and broadcasts to all other users
+  // that they are no longer online
   socket.on("disconnect", (reason) => {
     users.delete(username);
     io.emit("isOnline", { user: username, isOnline: false });

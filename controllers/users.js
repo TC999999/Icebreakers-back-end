@@ -26,21 +26,35 @@ const userCheck = async (req, res, next) => {
 };
 
 // retrieves data about a single user from database and returns it to the client-side; additionally, returns
-// all of that user's interests andwhether a conversation exists between the current user and the other user
+// all of that user's interests and whether the current user has sent the username in the params a direct
+// request and whether a conversation exists between the current user and the other user, but only if the
+// names don't match
 const getUserProfile = async (req, res, next) => {
   try {
     const { username } = req.params;
     const currentUser = req.session.user.username;
-    const userRes = await User.getUserProfile(username, currentUser);
+    const userRes = await User.getUserProfile(username);
     const userInterests = await Interests.getUserInterests(username);
     let conversationExists;
+    let requestSent;
     if (currentUser !== username) {
+      requestSent = await DirectRequests.checkRequests(
+        username,
+        currentUser,
+        false,
+        true
+      );
       conversationExists = await DirectRequests.checkConversationExists(
         currentUser,
         username
       );
     }
-    const user = { ...userRes, interests: userInterests, conversationExists };
+    const user = {
+      ...userRes,
+      interests: userInterests,
+      requestSent,
+      conversationExists,
+    };
     return res.status(200).send({ user });
   } catch (err) {
     return next(err);
