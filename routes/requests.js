@@ -12,9 +12,11 @@ const {
 const {
   createInvitation,
   removeInvitation,
+  deleteGroupInvitation,
   respondToInvitation,
   createGroupRequest,
   removeGroupRequest,
+  deleteGroupRequest,
   respondToGroupRequest,
 } = require("../controllers/groupRequests");
 const { ensureCorrectUser } = require("../middleware/auth");
@@ -30,13 +32,13 @@ router.get("/count/:username", ensureCorrectUser, getAllRequestCount);
 // route for creating a new direct request
 router.post("/direct/new/:username", ensureCorrectUser, makeRequest);
 
-// route for updating an already existing request
+// route for updating an already existing direct request
 router.patch("/direct/update/:id/:username", ensureCorrectUser, removeRequest);
 
-// route for deleting an already existing request
+// route for deleting an already existing direct request
 router.delete("/direct/delete/:id/:username", ensureCorrectUser, deleteRequest);
 
-// route for responding to a received request
+// route for responding to a received direct request
 router.post(
   "/direct/response/:id/:username",
   ensureCorrectUser,
@@ -50,6 +52,13 @@ router.patch(
   "/group/update/:id/:username",
   ensureCorrectUser,
   removeGroupRequest
+);
+
+// route for deleting an already existing group request
+router.delete(
+  "/group/delete/:id/:username",
+  ensureCorrectUser,
+  deleteGroupRequest
 );
 
 router.post(
@@ -71,6 +80,13 @@ router.patch(
   "/group/invitation/update/:id/:username",
   ensureCorrectUser,
   removeInvitation
+);
+
+// route for deleting an already existing group invitation
+router.delete(
+  "/group/invitation/delete/:id/:username",
+  ensureCorrectUser,
+  deleteGroupInvitation
 );
 
 // route to update existing invitation for group with id

@@ -39,6 +39,21 @@ const removeInvitation = async (req, res, next) => {
   }
 };
 
+// deletes group invitation from database; returns message if successful
+const deleteGroupInvitation = async (req, res, next) => {
+  try {
+    const { id, username } = req.params;
+
+    await GroupRequests.checkUserToGroupInvitation(id, username, true);
+    const { to, groupID } = req.body;
+    await GroupRequests.deleteInvitation(id, to, username, groupID);
+
+    return res.status(200).send({ message: "invitation deleted successfully" });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 // deletes invitation from database and if the recipient accepted the invitation, adds that user to the
 // group and returns user data to client-side
 const respondToInvitation = async (req, res, next) => {
@@ -98,6 +113,21 @@ const removeGroupRequest = async (req, res, next) => {
   }
 };
 
+// deletes group request from database, returns message if successful
+const deleteGroupRequest = async (req, res, next) => {
+  try {
+    const { id, username } = req.params;
+
+    await GroupRequests.checkUserToGroupRequest(id, username);
+    const { groupID } = req.body;
+    await GroupRequests.deleteRequest(id, username, groupID);
+
+    return res.status(200).send({ message: "request deleted successfully" });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 // deletes request from database and if the recipient accepted the request, adds that user to the
 // group and returns user data to client-side
 const respondToGroupRequest = async (req, res, next) => {
@@ -121,8 +151,10 @@ const respondToGroupRequest = async (req, res, next) => {
 module.exports = {
   createInvitation,
   removeInvitation,
+  deleteGroupInvitation,
   respondToInvitation,
   createGroupRequest,
   removeGroupRequest,
+  deleteGroupRequest,
   respondToGroupRequest,
 };

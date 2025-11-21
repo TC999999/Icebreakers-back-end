@@ -40,9 +40,9 @@ const deleteRequest = async (req, res, next) => {
     await DirectRequests.checkUserToDirectRequest(id, username, true);
     const { to } = req.body;
 
-    const request = await DirectRequests.deleteRequest(id, to, username);
+    await DirectRequests.deleteRequest(id, to, username);
 
-    return res.status(200).send({ request });
+    return res.status(200).send({ message: "request deleted successfully" });
   } catch (err) {
     return next(err);
   }
