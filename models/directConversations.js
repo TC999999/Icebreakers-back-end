@@ -1,5 +1,9 @@
 const db = require("../db");
-const { UnauthorizedError, NotFoundError } = require("../expressError");
+const {
+  UnauthorizedError,
+  NotFoundError,
+  ForbiddenError,
+} = require("../expressError");
 
 // Direct Messages model: handles all postgresql queries that involve direct message conversations, including
 // creating a new conversation, creating a new message for an existing conversation, retrieving all conversations
@@ -44,6 +48,34 @@ class DirectConversations {
     if (!res.rows[0]) {
       throw new NotFoundError("Conversation does not exist!");
     }
+  }
+
+  // finds two rows with two distinct usernames in the users to direct conversations table that have the same direct conversation id and
+  // returns that id
+  static async getConversationID(username1, username2) {
+    if (username1 === username2) {
+      throw new ForbiddenError("Cannot make a conversation with yourself");
+    }
+    const res = await db.query(
+      `
+      SELECT 
+        udc.direct_conversation_id AS id 
+      FROM 
+        users_to_direct_conversations AS udc 
+      JOIN 
+        (SELECT 
+          direct_conversation_id 
+        FROM 
+          users_to_direct_conversations 
+        WHERE username=$1) AS udc2 
+      ON 
+        udc.direct_conversation_id=udc2.direct_conversation_id 
+      WHERE 
+        udc.username=$2`,
+      [username1, username2]
+    );
+
+    return res.rows[0];
   }
 
   // checks if a user to direct conversation row with matching conversation id and username exist
@@ -115,7 +147,8 @@ class DirectConversations {
   }
 
   // returns a list of all conversations that a user is a part of, includes title, the other user, the
-  // total count of unread messages
+  // total count of unread messages, and the latest message from that conversation, which is shortened if
+  // longer than 30 characters
   static async getAllConversations(username) {
     const res = await db.query(
       `SELECT 
@@ -123,41 +156,59 @@ class DirectConversations {
         dc.title, 
         dc.last_updated_at AS "lastUpdatedAt", 
         ou.other_user AS "otherUser", 
-        udc.unread_messages AS "unreadMessages" 
+        udc.unread_messages AS "unreadMessages", 
+        CASE WHEN CHAR_LENGTH(lm.latest_message) > 30
+        THEN CONCAT(SUBSTRING(lm.latest_message, 1, 30), '...') 
+        ELSE lm.latest_message END AS "latestMessage" 
       FROM 
         direct_conversations AS dc 
-      JOIN 
-        users_to_direct_conversations AS udc 
-      ON 
-        dc.id=udc.direct_conversation_id 
-      JOIN 
+      LEFT JOIN LATERAL 
         (SELECT 
-          dc.id, 
-          udc.username AS "other_user" 
+          content AS latest_message 
         FROM 
-          direct_conversations AS dc 
+          direct_conversations_messages 
+        WHERE 
+          direct_conversation_id=dc.id 
+        ORDER BY 
+          created_at 
+        DESC 
+        LIMIT 
+          1) AS lm 
+        ON TRUE 
         JOIN 
           users_to_direct_conversations AS udc 
         ON 
           dc.id=udc.direct_conversation_id 
-        WHERE 
-          dc.id 
-        IN 
+        JOIN 
           (SELECT 
-            udc2.direct_conversation_id 
+            dc.id, 
+            udc.username AS "other_user" 
           FROM 
-            users_to_direct_conversations AS udc2 
+            direct_conversations AS dc 
+          JOIN 
+            users_to_direct_conversations AS udc 
+          ON 
+            dc.id=udc.direct_conversation_id 
           WHERE 
-            username=$1) 
-        AND 
-          username!=$1) AS ou 
-      ON 
-        ou.id=dc.id 
-      WHERE 
-        username=$1`,
+            dc.id 
+          IN 
+            (SELECT 
+              udc2.direct_conversation_id 
+            FROM 
+              users_to_direct_conversations AS udc2 
+            WHERE 
+              username=$1) 
+          AND 
+            username!=$1) AS ou 
+        ON 
+          ou.id=dc.id 
+        WHERE 
+          udc.username=$1
+        ORDER BY
+          dc.last_updated_at
+        DESC`,
       [username]
     );
-
     return res.rows;
   }
 

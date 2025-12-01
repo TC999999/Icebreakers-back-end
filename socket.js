@@ -5,6 +5,7 @@ const { sessionMiddleware, corsOptions } = require("./serverConfig");
 const DirectConversations = require("./models/directConversations");
 const GroupConversations = require("./models/groupConversations");
 const constructToastMessage = require("./helpers/constructToastMessage");
+const users = require("./socketStore");
 
 const server = http.createServer(app);
 
@@ -13,9 +14,6 @@ const io = new Server(server, {
   pingInterval: 25000,
   pingTimeout: 60000,
 });
-
-// for storing user socket ids
-const users = new Map();
 
 // allows socket.io to access express-session middleware
 io.engine.use(sessionMiddleware);

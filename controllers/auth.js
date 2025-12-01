@@ -2,6 +2,8 @@ const Authorization = require("../models/auth");
 const DirectConversations = require("../models/directConversations");
 const Requests = require("../models/requests");
 const Interests = require("../models/interests");
+const users = require("../socketStore");
+const { ForbiddenError } = require("../expressError");
 
 // receives new user data from client-side, adds new user data to users table, adds interests to one-to-many
 // interests to users table, sets data in user express session, and returns user data to client-side
@@ -54,6 +56,10 @@ const logInUser = async (req, res, next) => {
       username,
       password,
     });
+
+    if (users.has(username)) {
+      throw new ForbiddenError("User is already logged in on another browser!");
+    }
 
     const { unansweredRequests } = await Requests.getUnansweredRequestCount(
       username

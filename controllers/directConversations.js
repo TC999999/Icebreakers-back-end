@@ -14,6 +14,20 @@ const getAllConversations = async (req, res, next) => {
   }
 };
 
+// retrieves the direct conversation id that two users share (may or may not exist) and returns them to the client-side
+const getConversationID = async (req, res, next) => {
+  try {
+    const { username, otherUser } = req.params;
+    const directConversation = await DirectConversations.getConversationID(
+      username,
+      otherUser
+    );
+    return res.status(200).send(directConversation);
+  } catch (err) {
+    return next(err);
+  }
+};
+
 // creates a new message made by single user that belongs to a single direct conversation and returns it
 // to the client-side; throws error if conversation does not exist or user is not involved in conversation
 const createNewMessage = async (req, res, next) => {
@@ -78,6 +92,7 @@ const editConversation = async (req, res, next) => {
 };
 
 module.exports = {
+  getConversationID,
   createNewMessage,
   getAllConversations,
   getConversationMessages,

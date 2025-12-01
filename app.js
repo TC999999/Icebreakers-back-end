@@ -7,7 +7,6 @@ const interestsRoutes = require("./routes/interests");
 const requestRoutes = require("./routes/requests");
 const directMessagesRoutes = require("./routes/directConversations");
 const groupMessagesRoutes = require("./routes/groupConversations");
-
 const { sessionMiddleware, corsMiddleware } = require("./serverConfig");
 const app = express();
 
