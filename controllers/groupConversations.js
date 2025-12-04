@@ -131,6 +131,33 @@ const createNewMessage = async (req, res, next) => {
   }
 };
 
+// retrives a list of group id, names, and unread message count that a single user is a part of and returns
+// it to the client side
+const getGroupTabList = async (req, res, next) => {
+  try {
+    const { username } = req.params;
+    const groups = await GroupConversations.getAllGroupTabs(username);
+    return res.status(200).send({ groups });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// retrieves a list of users in a single group and a list of messages in a single group and returns
+// both to the client side
+const getGroupMessageInformation = async (req, res, next) => {
+  try {
+    const { username, id } = req.params;
+    await GroupConversations.checkGroup(id, username, false, false, true);
+    const users = await GroupConversations.getGroupUsers(id, username);
+    const messages = await GroupConversations.getAllGroupMessages(id);
+
+    return res.status(200).send({ users, messages });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 // retrives a small amount of data about a single group conversation
 const getSimpleGroupInfo = async (req, res, next) => {
   try {
@@ -142,12 +169,34 @@ const getSimpleGroupInfo = async (req, res, next) => {
   }
 };
 
+// adds a new message to the group conversation message table and returns message to be sent to client side,
+// if user is not in group, throws an error
+const createGroupMessage = async (req, res, next) => {
+  try {
+    const { id, username } = req.params;
+    await GroupConversations.checkGroup(id, username, false, false, true);
+    const { content } = req.body;
+    const message = await GroupConversations.createNewMessage(
+      content,
+      username,
+      id
+    );
+
+    return res.status(200).send({ message });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 module.exports = {
   createNewConversation,
   getAllGroupNames,
+  getGroupTabList,
   getAllGroups,
   createNewMessage,
   getGroup,
   searchGroups,
   getSimpleGroupInfo,
+  getGroupMessageInformation,
+  createGroupMessage,
 };

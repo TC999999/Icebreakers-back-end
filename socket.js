@@ -30,18 +30,31 @@ io.on("connection", async (socket) => {
   // broadcasts to all other users that the current user is online
   socket.broadcast.emit("isOnline", { user: username, isOnline: true });
 
+  // checks if users map stored in server memory contains inputted username, and performs callback
+  // function with result
   socket.on("isOnline", (user, callback) => {
     const isOnline = users.has(user);
     callback(isOnline);
   });
 
+  socket.on("isOnlineGroup", (user, callback) => {
+    let newUsers = user.map((u) => {
+      return { ...u, isOnline: users.has(u.username) };
+    });
+
+    callback(newUsers);
+  });
+
   // joins/creates rooms for sending and receiving group messages
   const groups = await GroupConversations.getAllGroupsSocket(username);
-  socket.join(
-    groups.map((id) => {
-      return "group:" + id;
-    })
-  );
+  const rooms = groups.map((id) => {
+    return "group:" + id;
+  });
+
+  rooms.forEach((room) => {
+    socket.join(room);
+    socket.to(room).emit("isOnline", { user: username, isOnline: true });
+  });
 
   // when user emits "addRequest" signal, sends request, updated unanswered request count, and notification
   // message to recipient user client side; also updates the unanswered request count in the recipient

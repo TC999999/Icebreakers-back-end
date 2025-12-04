@@ -17,7 +17,8 @@ class GroupConversations {
     id,
     username,
     inGroupProfile = false,
-    isInGroup = false
+    isInGroup = false,
+    inGroupMessages = false
   ) {
     const res = await db.query(
       `
@@ -33,12 +34,29 @@ class GroupConversations {
     );
     if (inGroupProfile) {
       return res.rows[0] !== undefined;
-    } else if (!inGroupProfile && !res.rows[0] && isInGroup) {
+    } else if (
+      !inGroupProfile &&
+      !res.rows[0] &&
+      isInGroup &&
+      !inGroupMessages
+    ) {
       throw new ForbiddenError(
         `You cannot make an invitation for a group you are not a part of`
       );
-    } else if (!inGroupProfile && res.rows[0] && !isInGroup) {
-      throw new ForbiddenError(`${to} is already in this group`);
+    } else if (
+      !inGroupProfile &&
+      res.rows[0] &&
+      !isInGroup &&
+      !inGroupMessages
+    ) {
+      throw new ForbiddenError(`${username} is already in this group`);
+    } else if (
+      !inGroupProfile &&
+      !res.rows[0] &&
+      !isInGroup &&
+      inGroupMessages
+    ) {
+      throw new ForbiddenError(`${username} is not a member of this group`);
     }
   }
 
@@ -222,6 +240,43 @@ class GroupConversations {
     return res.rows[0];
   }
 
+  // returns the total number of unread messages from the users to group conversations table that contain
+  // the inputted username; used upon logging in
+  static async getAllUnreadMessageCount(username) {
+    const res = await db.query(
+      `SELECT 
+        SUM(ugc.unread_messages) AS "unreadGroupMessages" 
+      FROM 
+        users_to_group_conversations AS ugc
+      WHERE 
+        ugc.username=$1`,
+      [username]
+    );
+
+    return res.rows[0];
+  }
+
+  // returns a list of rows from the group conversations table joined with the users to group
+  // conversations where the usernames match; used for tabs in group conversation messages page
+  static async getAllGroupTabs(username) {
+    const res = await db.query(
+      `SELECT 
+        gc.id, 
+        gc.title,
+        ugc.unread_messages AS unreadMessages
+      FROM 
+        group_conversations AS gc 
+      JOIN 
+        users_to_group_conversations AS ugc 
+      ON 
+        gc.id=ugc.group_conversation_id 
+      WHERE 
+        ugc.username=$1;`,
+      [username]
+    );
+    return res.rows;
+  }
+
   // returns a simpler list of rows from the group conversations table joined with the users to group
   // conversations where the usernames match; used for inviting another user into a group
   static async getAllGroupsSingleList(username) {
@@ -307,6 +362,53 @@ class GroupConversations {
     return res.rows[0];
   }
 
+  // returns all rows from the users to group conversations table that contain the inputted group
+  // conversation id and do not include the inputted username
+  static async getGroupUsers(id, username) {
+    const res = await db.query(
+      `SELECT 
+        ugc.username,
+        u.favorite_color AS "favoriteColor"
+      FROM 
+        users_to_group_conversations AS ugc
+      JOIN
+        users AS u
+      ON
+        u.username=ugc.username
+      WHERE 
+        ugc.group_conversation_id=$1 
+      AND 
+        u.username!=$2`,
+      [id, username]
+    );
+
+    return res.rows.map((user) => {
+      return { ...user, isOnline: false };
+    });
+  }
+
+  // returns all rows from the group conversations messages table that contain the inputted group
+  // conversation id
+  static async getAllGroupMessages(id) {
+    const res = await db.query(
+      `
+      SELECT 
+        id,
+        content,
+        username,
+        created_at AS "createdAt"
+      FROM 
+        group_conversations_messages
+      WHERE
+        group_conversation_id=$1`,
+      [id]
+    );
+
+    return res.rows;
+  }
+
+  // adds a single row to the group conversation messages table for the group with the inputted id and from
+  // the inputted username
   static async createNewMessage(content, username, group_conversation_id) {
     const res = await db.query(
       `INSERT INTO group_conversations_messages
@@ -317,7 +419,7 @@ class GroupConversations {
         RETURNING
             id,
             content,
-            username
+            username,
             created_at AS "createdAt"`,
       [content, username, group_conversation_id]
     );

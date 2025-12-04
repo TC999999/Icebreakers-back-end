@@ -1,5 +1,6 @@
 const Authorization = require("../models/auth");
 const DirectConversations = require("../models/directConversations");
+const GroupConversations = require("../models/groupConversations");
 const Requests = require("../models/requests");
 const Interests = require("../models/interests");
 const users = require("../socketStore");
@@ -35,6 +36,7 @@ const registerUser = async (req, res, next) => {
       isFlagged: user.isFlagged,
       unansweredRequests: 0,
       unreadMessages: 0,
+      unreadGroupMessages: 0,
     };
 
     req.session.user = userSession;
@@ -68,6 +70,9 @@ const logInUser = async (req, res, next) => {
     const { unreadMessages } =
       await DirectConversations.getAllUnreadMessageCount(username);
 
+    const { unreadGroupMessages } =
+      await GroupConversations.getAllUnreadMessageCount(username);
+
     let userSession = {
       username: user.username,
       favoriteColor: user.favoriteColor,
@@ -75,6 +80,7 @@ const logInUser = async (req, res, next) => {
       isFlagged: user.isFlagged,
       unansweredRequests: parseFloat(unansweredRequests),
       unreadMessages: parseFloat(unreadMessages) || 0,
+      unreadGroupMessages: parseFloat(unreadGroupMessages) || 0,
     };
 
     req.session.user = userSession;
