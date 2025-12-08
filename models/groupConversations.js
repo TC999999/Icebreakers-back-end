@@ -263,6 +263,7 @@ class GroupConversations {
       `SELECT 
         gc.id, 
         gc.title,
+        gc.host_user AS "host",
         ugc.unread_messages AS "unreadMessages"
       FROM 
         group_conversations AS gc 

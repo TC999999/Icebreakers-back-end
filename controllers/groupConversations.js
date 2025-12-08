@@ -135,14 +135,16 @@ const getGroupMessageInformation = async (req, res, next) => {
 
     await GroupConversations.checkGroup(id, username, false, false, true);
     const { unreadGroupMessages } = req.query;
+    const { title, host } = await GroupConversations.getSimpleGroupInfo(id);
     const users = await GroupConversations.getGroupUsers(id, username);
     const messages = await GroupConversations.getAllGroupMessages(id);
 
     if (unreadGroupMessages > 0) {
       await GroupConversations.clearUnreadMessages(id, username);
     }
+    console.log(host);
 
-    return res.status(200).send({ users, messages });
+    return res.status(200).send({ users, messages, title, host });
   } catch (err) {
     return next(err);
   }
