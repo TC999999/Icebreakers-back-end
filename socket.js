@@ -30,13 +30,15 @@ io.on("connection", async (socket) => {
   // broadcasts to all other users that the current user is online
   socket.broadcast.emit("isOnline", { user: username, isOnline: true });
 
-  // checks if users map stored in server memory contains inputted username, and performs callback
+  // checks if users map stored in server memory contains inputted username, and performs a callback
   // function with result
   socket.on("isOnline", (user, callback) => {
     const isOnline = users.has(user);
     callback(isOnline);
   });
 
+  // checks if a group of usernames is stored in the users map stored in server memory, and performs a
+  // callback function with results
   socket.on("isOnlineGroup", (user, callback) => {
     let newUsers = user.map((u) => {
       return { ...u, isOnline: users.has(u.username) };
@@ -127,6 +129,12 @@ io.on("connection", async (socket) => {
     session.save();
   });
 
+  // reduces the current user's unread group message count in express session
+  socket.on("clearTotalUnreadGroupMessages", ({ unreadGroupMessages }) => {
+    session.user.unreadGroupMessages -= unreadGroupMessages;
+    session.save();
+  });
+
   // when user emits signal, sends information about whether the user is typing a message to the recipient
   // user or not
   socket.on("isTyping", ({ otherUser, id, to, isTyping }) => {
@@ -140,6 +148,12 @@ io.on("connection", async (socket) => {
         });
       }
     }
+  });
+
+  // when user emits signal, sends information about whether the user is typing a message to a specific
+  // group or not
+  socket.on("isGroupTyping", ({ id, isTyping }) => {
+    socket.to("group:" + id).emit("isGroupTyping", { id, username, isTyping });
   });
 
   // when user emits signal, sends new conversation to be added to recipient user's client side
@@ -219,6 +233,14 @@ io.on("connection", async (socket) => {
     session.save();
   });
 
+  // decreases the current user's unread message count in express session and clears the total number of
+  // unread messages in the database
+  socket.on("decreaseUnreadGroupMessages", async ({ id }) => {
+    await GroupConversations.clearUnreadMessages(id, session.user.username);
+    session.user.unreadGroupMessages -= 1;
+    session.save();
+  });
+
   // when user emits signal, sends updated conversation data to recipient user
   socket.on("editConversation", ({ conversation, to }) => {
     if (users.has(to)) {
@@ -251,6 +273,21 @@ io.on("connection", async (socket) => {
     socket.to("group:" + groupID).emit("addUserToGroup", {
       groupID,
       user,
+    });
+  });
+
+  // when user emits signal, sends new message to everyone in room with specified group id, also updates
+  // unread message count in session for each user in the group
+  socket.on("groupMessage", ({ message, id, userList }) => {
+    socket.to("group:" + id).emit("groupMessage", { message, id });
+    socket.to("group:" + id).emit("increaseUnreadGroupMessages");
+
+    userList.forEach((u) => {
+      if (users.has(u.username)) {
+        let recipientSocket = users.get(u.username).socket;
+        recipientSocket.request.session.user.unreadGroupMessages += 1;
+        recipientSocket.request.session.save();
+      }
     });
   });
 

@@ -212,6 +212,23 @@ class DirectConversations {
     return res.rows;
   }
 
+  // retrieves the saved number of unread messages a user has in a single user to direct conversation row
+  static async getUnreadMessages(id, username) {
+    const res = await db.query(
+      `SELECT
+        unread_messages AS "unreadMessages"
+      FROM
+        users_to_direct_conversations 
+      WHERE 
+        direct_conversation_id=$1 
+      AND 
+        username=$2`,
+      [id, username]
+    );
+
+    return res.rows[0];
+  }
+
   // increases the saved number of unread messages a user has in a single user to direct conversation row
   // by one
   static async updateUnreadMessages(id, username) {

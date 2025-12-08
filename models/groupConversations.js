@@ -263,7 +263,7 @@ class GroupConversations {
       `SELECT 
         gc.id, 
         gc.title,
-        ugc.unread_messages AS unreadMessages
+        ugc.unread_messages AS "unreadMessages"
       FROM 
         group_conversations AS gc 
       JOIN 
@@ -422,6 +422,51 @@ class GroupConversations {
             username,
             created_at AS "createdAt"`,
       [content, username, group_conversation_id]
+    );
+
+    return res.rows[0];
+  }
+
+  // updates multiple rows in the users to group conversations table, increasing
+  // the number of unread messages in a group with the matching id by one and returning all
+  // rows that were updated
+  static async updateUnreadMessages(id, username) {
+    let res = await db.query(
+      `UPDATE 
+        users_to_group_conversations
+      SET 
+        unread_messages=unread_messages+1 
+      WHERE 
+        group_conversation_id=$1 
+      AND 
+        username!=$2
+      RETURNING
+        group_conversation_id AS id,
+        username,
+        unread_messages AS "unreadMessages"
+        `,
+      [id, username]
+    );
+
+    return res.rows;
+  }
+
+  // updates a single row in the users to group conversations table, setting the number of unread
+  // messages in a group with the matching id to zero and returning the row that was updated
+  static async clearUnreadMessages(id, username) {
+    let res = await db.query(
+      `UPDATE 
+        users_to_group_conversations
+      SET 
+        unread_messages=0
+      WHERE 
+        group_conversation_id=$1 
+      AND 
+        username=$2
+      RETURNING
+        unread_messages AS "unreadMessages"
+        `,
+      [id, username]
     );
 
     return res.rows[0];

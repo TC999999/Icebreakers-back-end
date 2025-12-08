@@ -115,23 +115,7 @@ const getGroup = async (req, res, next) => {
   }
 };
 
-// adds new group message to database using data sent from client-side and returns that new
-// group message information to the client-side
-const createNewMessage = async (req, res, next) => {
-  try {
-    const { content, username, group_conversation_id } = req.body;
-    const message = await GroupConversations.createNewMessage(
-      content,
-      username,
-      group_conversation_id
-    );
-    return res.status(201).send({ message });
-  } catch (err) {
-    return next(err);
-  }
-};
-
-// retrives a list of group id, names, and unread message count that a single user is a part of and returns
+// retrieves a list of group id, names, and unread message count that a single user is a part of and returns
 // it to the client side
 const getGroupTabList = async (req, res, next) => {
   try {
@@ -148,9 +132,15 @@ const getGroupTabList = async (req, res, next) => {
 const getGroupMessageInformation = async (req, res, next) => {
   try {
     const { username, id } = req.params;
+
     await GroupConversations.checkGroup(id, username, false, false, true);
+    const { unreadGroupMessages } = req.query;
     const users = await GroupConversations.getGroupUsers(id, username);
     const messages = await GroupConversations.getAllGroupMessages(id);
+
+    if (unreadGroupMessages > 0) {
+      await GroupConversations.clearUnreadMessages(id, username);
+    }
 
     return res.status(200).send({ users, messages });
   } catch (err) {
@@ -182,7 +172,9 @@ const createGroupMessage = async (req, res, next) => {
       id
     );
 
-    return res.status(200).send({ message });
+    const users = await GroupConversations.updateUnreadMessages(id, username);
+
+    return res.status(200).send({ message, users });
   } catch (err) {
     return next(err);
   }
@@ -193,7 +185,6 @@ module.exports = {
   getAllGroupNames,
   getGroupTabList,
   getAllGroups,
-  createNewMessage,
   getGroup,
   searchGroups,
   getSimpleGroupInfo,
