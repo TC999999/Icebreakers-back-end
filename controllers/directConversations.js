@@ -63,11 +63,11 @@ const getConversationMessages = async (req, res, next) => {
       id,
       username
     );
-
     const { unreadMessages } = await DirectConversations.getUnreadMessages(
       id,
       username
     );
+
     if (unreadMessages > 0) {
       await DirectConversations.clearUnreadMessages(id, username);
     }

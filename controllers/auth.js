@@ -35,7 +35,7 @@ const registerUser = async (req, res, next) => {
       isAdmin: user.isAdmin,
       isFlagged: user.isFlagged,
       unansweredRequests: 0,
-      unreadMessages: 0,
+      unreadDirectMessages: 0,
       unreadGroupMessages: 0,
     };
 
@@ -67,7 +67,7 @@ const logInUser = async (req, res, next) => {
       username
     );
 
-    const { unreadMessages } =
+    const { unreadDirectMessages } =
       await DirectConversations.getAllUnreadMessageCount(username);
 
     const { unreadGroupMessages } =
@@ -79,7 +79,7 @@ const logInUser = async (req, res, next) => {
       isAdmin: user.isAdmin,
       isFlagged: user.isFlagged,
       unansweredRequests: parseFloat(unansweredRequests),
-      unreadMessages: parseFloat(unreadMessages) || 0,
+      unreadDirectMessages: parseFloat(unreadDirectMessages) || 0,
       unreadGroupMessages: parseFloat(unreadGroupMessages) || 0,
     };
 

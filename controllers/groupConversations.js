@@ -132,19 +132,23 @@ const getGroupTabList = async (req, res, next) => {
 const getGroupMessageInformation = async (req, res, next) => {
   try {
     const { username, id } = req.params;
-
     await GroupConversations.checkGroup(id, username, false, false, true);
-    const { unreadGroupMessages } = req.query;
-    const { title, host } = await GroupConversations.getSimpleGroupInfo(id);
-    const users = await GroupConversations.getGroupUsers(id, username);
-    const messages = await GroupConversations.getAllGroupMessages(id);
 
-    if (unreadGroupMessages > 0) {
+    const messages = await GroupConversations.getAllGroupMessages(id);
+    const conversationData = await GroupConversations.getSimpleGroupInfo(id);
+    const users = await GroupConversations.getGroupUsers(id, username);
+    const { unreadMessages } = await GroupConversations.getUnreadMessages(
+      id,
+      username
+    );
+
+    if (unreadMessages > 0) {
       await GroupConversations.clearUnreadMessages(id, username);
     }
-    console.log(host);
 
-    return res.status(200).send({ users, messages, title, host });
+    return res
+      .status(200)
+      .send({ users, messages, ...conversationData, unreadMessages });
   } catch (err) {
     return next(err);
   }

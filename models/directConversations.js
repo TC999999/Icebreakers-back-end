@@ -315,7 +315,7 @@ class DirectConversations {
   static async getAllUnreadMessageCount(username) {
     const res = await db.query(
       `SELECT 
-        SUM(unread_messages) AS "unreadMessages" 
+        SUM(unread_messages) AS "unreadDirectMessages" 
       FROM 
         users_to_direct_conversations 
       WHERE 

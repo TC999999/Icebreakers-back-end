@@ -3,7 +3,6 @@ const { ForbiddenError } = require("../expressError");
 const {
   constructGroupSearchString,
 } = require("../helpers/constructSearchString");
-const { insertMultipleUsers } = require("../helpers/insertMultipleSQL");
 
 // class of static functions that handle the database logic for the group conversations table and users to
 // group conversations table
@@ -423,6 +422,24 @@ class GroupConversations {
             username,
             created_at AS "createdAt"`,
       [content, username, group_conversation_id]
+    );
+
+    return res.rows[0];
+  }
+
+  // returns the number of unread messages from the users to group conversations table that contain
+  // the inputted group id and username
+  static async getUnreadMessages(id, username) {
+    const res = await db.query(
+      `SELECT 
+        unread_messages AS "unreadMessages" 
+      FROM 
+        users_to_group_conversations
+      WHERE 
+        group_conversation_id=$1
+      AND
+        username=$2`,
+      [id, username]
     );
 
     return res.rows[0];

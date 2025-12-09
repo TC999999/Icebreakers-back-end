@@ -124,14 +124,14 @@ io.on("connection", async (socket) => {
   });
 
   // reduces the current user's unread direct message count in express session
-  socket.on("clearTotalUnreadMessages", ({ unreadMessages }) => {
-    session.user.unreadMessages -= unreadMessages;
+  socket.on("clearTotalUnreadDirectMessages", ({ unreadMessages }) => {
+    session.user.unreadDirectMessages -= unreadMessages;
     session.save();
   });
 
   // reduces the current user's unread group message count in express session
-  socket.on("clearTotalUnreadGroupMessages", ({ unreadGroupMessages }) => {
-    session.user.unreadGroupMessages -= unreadGroupMessages;
+  socket.on("clearTotalUnreadGroupMessages", ({ unreadMessages }) => {
+    session.user.unreadGroupMessages -= unreadMessages;
     session.save();
   });
 
@@ -209,7 +209,7 @@ io.on("connection", async (socket) => {
       let recipientUID = users.get(to).id;
       let recipientSocket = users.get(to).socket;
       if (recipientUID && recipientSocket) {
-        io.to(recipientUID).emit("increaseUnreadMessages");
+        io.to(recipientUID).emit("increaseUnreadDirectMessages");
         io.to(recipientUID).emit("directMessage", {
           message,
           id,
@@ -219,7 +219,7 @@ io.on("connection", async (socket) => {
           message: message.content,
           pathname: "/conversations",
         });
-        recipientSocket.request.session.user.unreadMessages += 1;
+        recipientSocket.request.session.user.unreadDirectMessages += 1;
         recipientSocket.request.session.save();
       }
     }
@@ -227,9 +227,9 @@ io.on("connection", async (socket) => {
 
   // decreases the current user's unread message count in express session and clears the total number of
   // unread messages in the database
-  socket.on("decreaseUnreadMessages", async ({ id }) => {
+  socket.on("decreaseUnreadDirectMessages", async ({ id }) => {
     await DirectConversations.clearUnreadMessages(id, username);
-    session.user.unreadMessages -= 1;
+    session.user.unreadDirectMessages -= 1;
     session.save();
   });
 
@@ -279,7 +279,6 @@ io.on("connection", async (socket) => {
   // when user emits signal, sends new message to everyone in room with specified group id, also updates
   // unread message count in session for each user in the group
   socket.on("groupMessage", ({ message, group, id, userList }) => {
-    console.log(message);
     socket.to("group:" + id).emit("groupMessage", { message, id });
     socket.to("group:" + id).emit("increaseUnreadGroupMessages");
     socket.to("group:" + id).emit("notify", {
