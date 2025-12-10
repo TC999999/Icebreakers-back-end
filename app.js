@@ -7,11 +7,11 @@ const interestsRoutes = require("./routes/interests");
 const requestRoutes = require("./routes/requests");
 const directMessagesRoutes = require("./routes/directConversations");
 const groupMessagesRoutes = require("./routes/groupConversations");
+const blockRoutes = require("./routes/blockedUsersToUsers");
 const { sessionMiddleware, corsMiddleware } = require("./serverConfig");
 const app = express();
 
 // Middleware
-// app.use(cookieParser());
 app.use(corsMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -25,6 +25,7 @@ app.use("/interests", interestsRoutes);
 app.use("/requests", requestRoutes);
 app.use("/directMessage", directMessagesRoutes);
 app.use("/groupMessage", groupMessagesRoutes);
+app.use("/block", blockRoutes);
 
 // 404 Error Handler
 app.use(function (req, res, next) {

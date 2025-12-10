@@ -1,5 +1,6 @@
 const DirectRequests = require("../models/directRequests");
 const DirectConversations = require("../models/directConversations");
+const BlockedUsersToUsers = require("../models/blockedUsersToUsers");
 
 // adds a new request to the direct requests table using data sent from the client-side and then sends the
 // new request data back to the client side
@@ -7,6 +8,7 @@ const makeRequest = async (req, res, next) => {
   try {
     const { username } = req.params;
     const { to, content } = req.body;
+    await BlockedUsersToUsers.checkBlockedStatus(username, to);
     await DirectRequests.checkRequests(username, to, true);
     await DirectRequests.checkConversationExists(username, to, true);
     const request = await DirectRequests.makeRequest(to, username, content);
@@ -56,6 +58,8 @@ const respondToRequest = async (req, res, next) => {
     const { id, username } = req.params;
     await DirectRequests.checkUserToDirectRequest(id, username);
     const { from, accepted } = req.body;
+
+    if (accepted) await BlockedUsersToUsers.checkBlockedStatus(username, from);
 
     await DirectRequests.deleteRequest(id, username, from);
 

@@ -270,9 +270,11 @@ io.on("connection", async (socket) => {
 
   // when user emits signal, adds new user info to all group members' client side group user list
   socket.on("addUserToGroup", ({ groupID, user }) => {
+    const isOnline = users.has(user.username);
     socket.to("group:" + groupID).emit("addUserToGroup", {
       groupID,
       user,
+      isOnline,
     });
   });
 
