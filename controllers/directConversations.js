@@ -1,3 +1,4 @@
+const BlockedUsersToUsers = require("../models/blockedUsersToUsers");
 const DirectConversations = require("../models/directConversations");
 
 // retrieves a list of all direct conversations that belong to a single user and returns them to the
@@ -35,13 +36,15 @@ const createNewMessage = async (req, res, next) => {
     const { username, id } = req.params;
     await DirectConversations.conversationExists(id);
     await DirectConversations.userConversationCheck(id, username);
-    const { content } = req.body;
-    const { message, otherUser } = await DirectConversations.createNewMessage(
+
+    const { content, otherUser } = req.body;
+    await BlockedUsersToUsers.checkBlockedStatus(username, otherUser);
+    const { message } = await DirectConversations.createNewMessage(
       content,
       username,
       id
     );
-    await DirectConversations.updateUnreadMessages(id, otherUser.username);
+    await DirectConversations.updateUnreadMessages(id, otherUser);
     return res.status(201).send({ message });
   } catch (err) {
     return next(err);

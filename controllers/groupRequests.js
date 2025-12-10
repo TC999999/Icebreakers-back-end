@@ -1,3 +1,4 @@
+const BlockedUsersToUsers = require("../models/blockedUsersToUsers");
 const GroupConversations = require("../models/groupConversations");
 const GroupRequests = require("../models/groupRequests");
 
@@ -12,6 +13,8 @@ const createInvitation = async (req, res, next) => {
     await GroupConversations.checkGroup(id, to);
     await GroupRequests.checkRequest(id, to, true);
     await GroupRequests.checkInvitation(id, to, true);
+
+    await BlockedUsersToUsers.checkBlockedStatus(username, to);
 
     const invitation = await GroupRequests.createInvitation(
       username,
@@ -61,6 +64,7 @@ const respondToInvitation = async (req, res, next) => {
     const { id, username } = req.params;
     const { from, groupID, accepted } = req.body;
     await GroupRequests.checkUserToGroupInvitation(id, username);
+    if (accepted) await BlockedUsersToUsers.checkBlockedStatus(username, from);
 
     await GroupRequests.deleteInvitation(id, username, from, groupID);
     let message = "Invitation was declined";
@@ -85,6 +89,9 @@ const createGroupRequest = async (req, res, next) => {
     const { id, username } = req.params;
 
     const { content } = req.body;
+
+    const { host } = await GroupConversations.getSimpleGroupInfo(id);
+    await BlockedUsersToUsers.checkBlockedStatus(username, host);
 
     await GroupConversations.checkGroup(id, username);
     await GroupRequests.checkRequest(id, username, true);
@@ -134,6 +141,11 @@ const respondToGroupRequest = async (req, res, next) => {
   try {
     const { id, username } = req.params;
     const { from, groupID, accepted } = req.body;
+
+    if (accepted) {
+      const { host } = await GroupConversations.getSimpleGroupInfo(groupID);
+      await BlockedUsersToUsers.checkBlockedStatus(username, host);
+    }
     await GroupRequests.checkHostToGroupRequest(id, groupID, username);
     await GroupRequests.deleteRequest(id, from, groupID);
 

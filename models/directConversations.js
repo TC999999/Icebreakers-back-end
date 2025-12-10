@@ -129,21 +129,7 @@ class DirectConversations {
       [message.createdAt, id]
     );
 
-    const otherUserRes = await db.query(
-      `SELECT
-        username
-      FROM
-        users_to_direct_conversations
-      WHERE
-        direct_conversation_id=$1
-      AND
-        username!=$2`,
-      [id, username]
-    );
-
-    const otherUser = otherUserRes.rows[0];
-
-    return { message, otherUser };
+    return { message };
   }
 
   // returns a list of all conversations that a user is a part of, includes title, the other user, the
