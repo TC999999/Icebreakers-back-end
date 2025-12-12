@@ -88,6 +88,11 @@ const editConversation = async (req, res, next) => {
     const { username, id } = req.params;
     await DirectConversations.conversationExists(id);
     await DirectConversations.userConversationCheck(id, username);
+    const { recipient } = await DirectConversations.getOtherConversationUser(
+      id,
+      username
+    );
+    await BlockedUsersToUsers.checkBlockedStatus(username, recipient);
     const { title } = req.body;
     const updatedConversation = await DirectConversations.editConversation(
       id,

@@ -27,6 +27,15 @@ const removeRequest = async (req, res, next) => {
     await DirectRequests.checkUserToDirectRequest(id, username, true);
     const { remove } = req.body;
 
+    if (!remove) {
+      const { requesterUser, requestedUser } =
+        await DirectRequests.getRequestUsers(id);
+      await BlockedUsersToUsers.checkBlockedStatus(
+        requesterUser,
+        requestedUser
+      );
+    }
+
     const request = await DirectRequests.removeRequest(remove, id);
 
     return res.status(200).send({ request });

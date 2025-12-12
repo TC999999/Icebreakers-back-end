@@ -47,6 +47,23 @@ class DirectRequests {
     }
   }
 
+  // returns both user columns in a single row in the direct request table that contains a
+  // matching id
+  static async getRequestUsers(id) {
+    const res = await db.query(
+      `SELECT 
+        requester_user AS "requesterUser", 
+        requested_user AS "requestedUser" 
+      FROM 
+        direct_conversation_requests 
+      WHERE 
+        id=$1`,
+      [id]
+    );
+
+    return res.rows[0];
+  }
+
   // returns a matching row in the direct conversation requests where the inputted username matches the
   // either the requester username or requested username and the uuid matches the inputted id; used to
   // protect direct conversation requests from being edited by anybody other than the request's sender

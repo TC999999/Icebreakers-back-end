@@ -53,6 +53,8 @@ io.on("connection", async (socket) => {
     return "group:" + id;
   });
 
+  // for each group a user in in, on connection, the user joins/creates the socket room
+  // and emits to others in that room hat they are online
   rooms.forEach((room) => {
     socket.join(room);
     socket.to(room).emit("isOnline", { user: username, isOnline: true });

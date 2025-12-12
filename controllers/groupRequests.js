@@ -34,7 +34,12 @@ const removeInvitation = async (req, res, next) => {
   try {
     const { id, username } = req.params;
     const { remove } = req.body;
+
     await GroupRequests.checkUserToGroupInvitation(id, username, true);
+
+    const { invitedUser } = await GroupRequests.checkInvitationUsers(id);
+    if (!remove)
+      await BlockedUsersToUsers.checkBlockedStatus(username, invitedUser);
     const invitation = await GroupRequests.removeInvitation(remove, id);
     return res.status(200).send({ invitation });
   } catch (err) {
@@ -112,6 +117,11 @@ const removeGroupRequest = async (req, res, next) => {
     const { id, username } = req.params;
     await GroupRequests.checkUserToGroupRequest(id, username);
     const { remove } = req.body;
+
+    if (!remove) {
+      const { host } = await GroupConversations.getSimpleGroupInfo(id);
+      await BlockedUsersToUsers.addBlockedUser(username, host);
+    }
 
     const request = await GroupRequests.removeRequest(remove, id);
     return res.status(200).send({ request });

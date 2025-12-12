@@ -2,6 +2,7 @@ const User = require("../models/users");
 const Interests = require("../models/interests");
 const DirectRequests = require("../models/directRequests");
 const { ForbiddenError } = require("../expressError");
+const BlockedUsersToUsers = require("../models/blockedUsersToUsers");
 
 // checks database if a direct conversation between two users already exists
 const userCheck = async (req, res, next) => {
@@ -27,8 +28,8 @@ const userCheck = async (req, res, next) => {
 
 // retrieves data about a single user from database and returns it to the client-side; additionally, returns
 // all of that user's interests and whether the current user has sent the username in the params a direct
-// request and whether a conversation exists between the current user and the other user, but only if the
-// names don't match
+// request, whether a conversation exists between the current user and the other user, and if either user has
+// the other blocked, but only if the names don't match
 const getUserProfile = async (req, res, next) => {
   try {
     const { username } = req.params;
@@ -37,6 +38,8 @@ const getUserProfile = async (req, res, next) => {
     const userInterests = await Interests.getUserInterests(username);
     let conversationExists;
     let requestSent;
+    let blockedOtherUser;
+    let blockedByOtherUser;
     if (currentUser !== username) {
       requestSent = await DirectRequests.checkRequests(
         username,
@@ -48,12 +51,23 @@ const getUserProfile = async (req, res, next) => {
         currentUser,
         username
       );
+
+      blockedOtherUser = await BlockedUsersToUsers.checkBlockedOtherUser(
+        currentUser,
+        username
+      );
+      blockedByOtherUser = await BlockedUsersToUsers.checkBlockedByOtherUser(
+        currentUser,
+        username
+      );
     }
     const user = {
       ...userRes,
       interests: userInterests,
       requestSent,
       conversationExists,
+      blockedOtherUser,
+      blockedByOtherUser,
     };
     return res.status(200).send({ user });
   } catch (err) {

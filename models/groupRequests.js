@@ -350,5 +350,22 @@ class GroupRequests {
       [id]
     );
   }
+
+  // returns both the invited user column and the inviter user column in a single row in
+  // the group invitations column that contains the matching id
+  static async checkInvitationUsers(id) {
+    const res = await db.query(
+      `SELECT 
+        invited_user AS "invitedUser", 
+        inviter_user AS "inviterUser" 
+      FROM 
+        group_conversation_invitations 
+      WHERE 
+        id=$1`,
+      [id]
+    );
+
+    return res.rows[0];
+  }
 }
 module.exports = GroupRequests;
