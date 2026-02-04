@@ -16,10 +16,12 @@ const insertMultipleUsers = (usersArr, group_conversation_id) => {
   let returnStr = "";
 
   for (i = 0; i < usersArr - 1; i++) {
-    returnStr += `(${usersArr[i]},${group_conversation_id})`;
+    returnStr += `(${usersArr[i]}, ${group_conversation_id}), `;
   }
 
   returnStr += `('${usersArr[usersArr.length - 1]}', ${group_conversation_id})`;
+
+  return returnStr;
 };
 
 module.exports = { insertMultipleSQL, insertMultipleUsers };

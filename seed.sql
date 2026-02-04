@@ -118,12 +118,6 @@ CREATE TABLE users_to_group_conversations(
     PRIMARY KEY (username, group_conversation_id)
 );
 
-CREATE TABLE blocked_user_to_group_conversations(
-    blocked_user VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,
-    group_conversation_id UUID NOT NULL REFERENCES group_conversations ON DELETE CASCADE,
-    PRIMARY KEY (blocked_user, group_conversation_id)
-);
-
 CREATE TABLE group_conversation_requests(
     id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     requester_user VARCHAR(30) NOT NULL REFERENCES users ON DELETE CASCADE,

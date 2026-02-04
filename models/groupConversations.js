@@ -59,6 +59,23 @@ class GroupConversations {
     }
   }
 
+  static async isGroupHost(username, group_conversation_id) {
+    const res = await db.query(
+      `SELECT 
+        id, 
+        host_user 
+      FROM 
+        group_conversations 
+      WHERE 
+        id=$1 AND host_user=$2`,
+      [group_conversation_id, username]
+    );
+
+    if (!res.rows[0]) {
+      throw new ForbiddenError("You are not the host of this group!");
+    }
+  }
+
   // adds new row to users to group table with the inputted username and group conversation ID; returns
   // both the new username and their favorite color to be used in a socket emitter
   static async addNewUser(username, group_conversation_id) {
@@ -484,6 +501,23 @@ class GroupConversations {
       RETURNING
         unread_messages AS "unreadMessages"
         `,
+      [id, username]
+    );
+
+    return res.rows[0];
+  }
+
+  // deletes a single row in the users to group conversations table that contain both the matching id and username
+  static async removeUserFromGroup(id, username) {
+    let res = await db.query(
+      `DELETE FROM 
+        users_to_group_conversations 
+      WHERE 
+        group_conversation_id=$1 
+      AND 
+        username=$2
+      RETURNING
+        unread_messages AS "unreadGroupMessages"`,
       [id, username]
     );
 

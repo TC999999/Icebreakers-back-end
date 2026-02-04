@@ -186,6 +186,37 @@ const createGroupMessage = async (req, res, next) => {
   }
 };
 
+const getGroupMembersForDelete = async (req, res, next) => {
+  try {
+    const { username, id } = req.params;
+    await GroupConversations.isGroupHost(username, id);
+    const { title } = await GroupConversations.getSimpleGroupInfo(id);
+    const users = await GroupConversations.getGroupUsers(id, username);
+
+    return res.status(200).send({ title, users });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+const removeUserFromGroup = async (req, res, next) => {
+  try {
+    const { id, username } = req.params;
+    await GroupConversations.isGroupHost(username, id);
+    const { removedUser } = req.body;
+    await GroupConversations.checkGroup(id, removedUser, false, false, true);
+
+    let removedUserData = await GroupConversations.removeUserFromGroup(
+      id,
+      removedUser
+    );
+
+    return res.status(200).send({ removedUserData });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 module.exports = {
   createNewConversation,
   getAllGroupNames,
@@ -196,4 +227,6 @@ module.exports = {
   getSimpleGroupInfo,
   getGroupMessageInformation,
   createGroupMessage,
+  getGroupMembersForDelete,
+  removeUserFromGroup,
 };

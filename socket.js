@@ -301,6 +301,20 @@ io.on("connection", async (socket) => {
     });
   });
 
+  // removes a single user from a group room if it exists; also decreases unread group messages saved to express session
+  socket.on("removeFromGroup", ({ to, groupID, unreadGroupMessages }) => {
+    if (users.has(to)) {
+      let recipientUID = users.get(to).id;
+      let recipientSocket = users.get(to).socket;
+      if (recipientUID && recipientSocket) {
+        recipientSocket.leave("group:" + groupID);
+        recipientSocket.request.session.user.unreadGroupMessages -=
+          unreadGroupMessages;
+        recipientSocket.request.session.save();
+      }
+    }
+  });
+
   // when a user disconnects from socket, removes their data from users map, and broadcasts to all other users
   // that they are no longer online
   socket.on("disconnect", (reason) => {
