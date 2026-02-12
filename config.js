@@ -11,6 +11,8 @@ const ORIGIN_DOMAIN = process.env.ORIGIN_DOMAIN;
 
 const REDIS_URL = process.env.REDIS_URL;
 
+const IS_SECURE = process.env.IS_SECURE || false;
+
 // returns PostgreSQL url
 function getDBUri() {
   return process.env.NODE_ENV === "test"
@@ -24,5 +26,6 @@ module.exports = {
   SESSION_SECRET_KEY,
   ORIGIN_DOMAIN,
   REDIS_URL,
+  IS_SECURE,
   getDBUri,
 };

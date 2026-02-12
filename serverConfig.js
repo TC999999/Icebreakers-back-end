@@ -1,25 +1,28 @@
 const session = require("express-session");
 const cors = require("cors");
 const redisStore = require("./redis");
-const { SESSION_SECRET_KEY, ORIGIN_DOMAIN } = require("./config");
+const { SESSION_SECRET_KEY, ORIGIN_DOMAIN, IS_SECURE } = require("./config");
 
-const sessionMiddleware = session({
+const sessionOptions = {
   store: redisStore,
   secret: SESSION_SECRET_KEY,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false,
+    secure: IS_SECURE,
     httpOnly: true,
     sameSite: "strict",
-    maxAge: 60 * 60 * 3000,
+    maxAge: 60 * 60 * 10000,
   },
-});
+  rolling: true,
+};
 
 const corsOptions = {
   origin: ORIGIN_DOMAIN,
   credentials: true,
 };
+
+const sessionMiddleware = session(sessionOptions);
 
 const corsMiddleware = cors(corsOptions);
 

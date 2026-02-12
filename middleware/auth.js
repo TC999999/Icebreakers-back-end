@@ -1,11 +1,12 @@
-const { UnauthorizedError, UnacceptableError } = require("../expressError");
-const DirectRequests = require("../models/directRequests");
+const { UnauthorizedError, ForbiddenError } = require("../expressError");
 
 // middleware that ensures that the user cannot access a route without first being logged in
 function ensureLoggedIn(req, res, next) {
   try {
     if (!req.session.user) {
-      throw new UnacceptableError("Your must be logged in to access.");
+      throw new UnauthorizedError(
+        "Your session has expired. Please refresh the page and log back in.",
+      );
     }
     return next();
   } catch (err) {
@@ -17,11 +18,12 @@ function ensureLoggedIn(req, res, next) {
 // does not match the username in the url parameters
 function ensureCorrectUser(req, res, next) {
   try {
-    if (
-      !req.session.user ||
-      req.params.username !== req.session.user.username
-    ) {
-      throw new UnauthorizedError("This is not your information.");
+    if (!req.session.user) {
+      throw new UnauthorizedError(
+        "Your session has expired. Please refresh the page and log back in.",
+      );
+    } else if (req.params.username !== req.session.user.username) {
+      throw new ForbiddenError("This is not your information.");
     }
     return next();
   } catch (err) {
@@ -34,7 +36,7 @@ function ensureCorrectUser(req, res, next) {
 function ensureCorrectUserForRequest(req, res, next) {
   try {
     if (!req.session.user || req.body.from !== req.session.user.username) {
-      throw new UnauthorizedError("Cannot make a request for another user!");
+      throw new ForbiddenError("Cannot make a request for another user!");
     }
     return next();
   } catch (err) {
@@ -46,9 +48,7 @@ function ensureCorrectUserForRequest(req, res, next) {
 function ensureCorrectUserForReponse(req, res, next) {
   try {
     if (!req.session.user || req.body.to !== req.session.user.username) {
-      throw new UnauthorizedError(
-        "Cannot reponse to a request for another user!"
-      );
+      throw new ForbiddenError("Cannot reponse to a request for another user!");
     }
     return next();
   } catch (err) {
