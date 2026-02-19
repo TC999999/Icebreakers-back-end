@@ -48,7 +48,7 @@ function ensureCorrectUserForRequest(req, res, next) {
 function ensureCorrectUserForReponse(req, res, next) {
   try {
     if (!req.session.user || req.body.to !== req.session.user.username) {
-      throw new ForbiddenError("Cannot reponse to a request for another user!");
+      throw new ForbiddenError("Cannot repond to a request for another user!");
     }
     return next();
   } catch (err) {

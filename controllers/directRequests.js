@@ -1,6 +1,14 @@
 const DirectRequests = require("../models/directRequests");
 const DirectConversations = require("../models/directConversations");
 const BlockedUsersToUsers = require("../models/blockedUsersToUsers");
+const {
+  addRequestSocket,
+  removeRequestSocket,
+  requestResponseSocket,
+} = require("../helpers/socketFunctions/requests");
+const {
+  addConversationSocket,
+} = require("../helpers/socketFunctions/conversations");
 
 // adds a new request to the direct requests table using data sent from the client-side and then sends the
 // new request data back to the client side
@@ -11,7 +19,9 @@ const makeRequest = async (req, res, next) => {
     await BlockedUsersToUsers.checkBlockedStatus(username, to);
     await DirectRequests.checkRequests(username, to, true);
     await DirectRequests.checkConversationExists(username, to, true);
+
     const request = await DirectRequests.makeRequest(to, username, content);
+    addRequestSocket("direct-requests-received", to, request, username);
     return res.status(201).send({ request });
   } catch (err) {
     return next(err);
@@ -27,16 +37,29 @@ const removeRequest = async (req, res, next) => {
     await DirectRequests.checkUserToDirectRequest(id, username, true);
     const { remove } = req.body;
 
+    let to;
+
     if (!remove) {
       const { requesterUser, requestedUser } =
         await DirectRequests.getRequestUsers(id);
       await BlockedUsersToUsers.checkBlockedStatus(
         requesterUser,
-        requestedUser
+        requestedUser,
       );
+      to = requestedUser;
     }
 
     const request = await DirectRequests.removeRequest(remove, id);
+
+    if (!remove)
+      addRequestSocket("direct-requests-received", to, request, username);
+    else
+      removeRequestSocket(
+        "direct-requests-received",
+        request.to,
+        request,
+        username,
+      );
 
     return res.status(200).send({ request });
   } catch (err) {
@@ -72,11 +95,21 @@ const respondToRequest = async (req, res, next) => {
 
     await DirectRequests.deleteRequest(id, username, from);
 
+    requestResponseSocket(
+      { id, from, accepted },
+      from,
+      "direct-requests-sent",
+      username,
+    );
+
     if (accepted) {
       const conversation = await DirectConversations.createNewConversation(
         username,
-        from
+        from,
       );
+
+      addConversationSocket(conversation, from);
+
       return res.status(201).send({
         requestResponse: {
           conversation,
@@ -103,7 +136,7 @@ const checkConversationExists = async (req, res, next) => {
     const { username, username2 } = req.params;
     const conversationExists = await DirectRequests.checkConversationExists(
       username,
-      username2
+      username2,
     );
     return res.status(200).send({ conversationExists });
   } catch (err) {

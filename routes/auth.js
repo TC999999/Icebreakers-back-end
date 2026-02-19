@@ -5,7 +5,6 @@ const {
   getCurrentUser,
   logInUser,
 } = require("../controllers/auth");
-const { ensureLoggedIn } = require("../middleware/auth");
 
 const router = express.Router();
 

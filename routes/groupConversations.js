@@ -34,7 +34,7 @@ router.get("/:username/tabs", ensureCorrectUser, getGroupTabList);
 router.get(
   "/:username/message/:id",
   ensureCorrectUser,
-  getGroupMessageInformation
+  getGroupMessageInformation,
 );
 
 // route for adding new message to group conversation
@@ -44,9 +44,17 @@ router.post("/:username/message/:id", ensureCorrectUser, createGroupMessage);
 router.get("/id/:id", ensureLoggedIn, getGroup);
 
 // route for getting the information needed to remove a single user from a group with a matching id
-router.get("/:username/delete/:id/member", getGroupMembersForDelete);
+router.get(
+  "/:username/delete/:id/member",
+  ensureCorrectUser,
+  getGroupMembersForDelete,
+);
 
 // route for removing a single user from a group with a matching id
-router.delete("/:username/delete/:id/member", removeUserFromGroup);
+router.delete(
+  "/:username/delete/:id/member",
+  ensureCorrectUser,
+  removeUserFromGroup,
+);
 
 module.exports = router;

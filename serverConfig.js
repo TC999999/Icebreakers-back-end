@@ -12,7 +12,7 @@ const sessionOptions = {
     secure: IS_SECURE,
     httpOnly: true,
     sameSite: "strict",
-    maxAge: 60 * 60 * 10000,
+    maxAge: 60 * 60 * 1000,
   },
   rolling: true,
 };

@@ -36,10 +36,17 @@ class UnacceptableError extends ExpressError {
   }
 }
 
+class ExpiredSessionError extends ExpressError {
+  constructor(message = "Session Expired") {
+    super(message, 419);
+  }
+}
+
 module.exports = {
   BadRequestError,
   UnauthorizedError,
   ForbiddenError,
   NotFoundError,
   UnacceptableError,
+  ExpiredSessionError,
 };
