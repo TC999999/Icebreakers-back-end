@@ -113,35 +113,6 @@ const initializeSocket = (server) => {
       }
     });
 
-    // when user emits signal, sends both a signal to remove the request component from the recipient's request
-    // inbox and send them a notification about whether they accecpted the request; also updates user's
-    // unanswered requests count in session
-    socket.on("response", ({ response, to, requestType }) => {
-      // let recipientUID = users.get(to).id;
-      // if (recipientUID) {
-      //   io.to(recipientUID).emit("removeRequest", {
-      //     request: response,
-      //     requestType,
-
-      //   });
-
-      //   let responseKey = response.accepted ? "accepted" : "declined";
-
-      //   io.to(recipientUID).emit("notify", {
-      //     from: "Icebreakers",
-      //     message: constructToastMessage(
-      //       username,
-      //       response,
-      //       requestType,
-      //       responseKey
-      //     ),
-      //     pathname: "",
-      //   });
-
-      session.user.unansweredRequests += -1;
-      session.save();
-    });
-
     // when user emits signal, increases recipients unread message count, sends message to be added to list
     // of messages on client side, sends them a notification that they received a message, and increases
     // recipient's unread message count in their express session
