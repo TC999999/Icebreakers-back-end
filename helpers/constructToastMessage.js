@@ -5,7 +5,7 @@ const constructToastMessage = (
   username,
   content,
   requestType = "",
-  key = ""
+  key = "",
 ) => {
   let returnString = username + messageTemplate.get(requestType)[key].message;
 

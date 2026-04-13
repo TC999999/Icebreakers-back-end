@@ -169,7 +169,7 @@ const deleteGroupRequest = async (req, res, next) => {
 const respondToGroupRequest = async (req, res, next) => {
   try {
     const { id, username } = req.params;
-    const { from, groupID, accepted } = req.body;
+    const { from, groupID, groupTitle, accepted } = req.body;
 
     if (accepted) {
       const { host } = await GroupConversations.getSimpleGroupInfo(groupID);
@@ -179,7 +179,7 @@ const respondToGroupRequest = async (req, res, next) => {
     await GroupRequests.deleteRequest(id, from, groupID);
 
     requestResponseSocket(
-      { id, from, accepted },
+      { id, from, groupTitle, accepted },
       from,
       "group-requests-sent",
       username,
