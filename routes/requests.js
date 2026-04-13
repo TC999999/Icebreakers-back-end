@@ -33,7 +33,7 @@ router.get("/count/:username", ensureCorrectUser, getAllRequestCount);
 router.post("/direct/new/:username", ensureCorrectUser, makeRequest);
 
 // route for updating an already existing direct request
-router.patch("/direct/update/:id/:username", ensureCorrectUser, removeRequest);
+router.patch("/direct/remove/:id/:username", ensureCorrectUser, removeRequest);
 
 // route for deleting an already existing direct request
 router.delete("/direct/delete/:id/:username", ensureCorrectUser, deleteRequest);
@@ -42,7 +42,7 @@ router.delete("/direct/delete/:id/:username", ensureCorrectUser, deleteRequest);
 router.post(
   "/direct/response/:id/:username",
   ensureCorrectUser,
-  respondToRequest
+  respondToRequest,
 );
 
 // GROUP CONVERSATION REQUESTS
@@ -53,21 +53,21 @@ router.post("/group/:id/new/:username", ensureCorrectUser, createGroupRequest);
 router.patch(
   "/group/update/:id/:username",
   ensureCorrectUser,
-  removeGroupRequest
+  removeGroupRequest,
 );
 
 // route for deleting an already existing group request
 router.delete(
   "/group/delete/:id/:username",
   ensureCorrectUser,
-  deleteGroupRequest
+  deleteGroupRequest,
 );
 
 // route for responding to an already existing group request
 router.post(
   "/group/response/:id/:username",
   ensureCorrectUser,
-  respondToGroupRequest
+  respondToGroupRequest,
 );
 
 // GROUP CONVERSATION INVITATIONS
@@ -75,28 +75,28 @@ router.post(
 router.post(
   "/group/:id/invitation/new/:username",
   ensureCorrectUser,
-  createInvitation
+  createInvitation,
 );
 
 // route for updating an already existing group invitation
 router.patch(
   "/group/invitation/update/:id/:username",
   ensureCorrectUser,
-  removeInvitation
+  removeInvitation,
 );
 
 // route for deleting an already existing group invitation
 router.delete(
   "/group/invitation/delete/:id/:username",
   ensureCorrectUser,
-  deleteGroupInvitation
+  deleteGroupInvitation,
 );
 
 // route for responding to an already existing group invitation
 router.post(
   "/group/invitation/response/:id/:username",
   ensureCorrectUser,
-  respondToInvitation
+  respondToInvitation,
 );
 
 module.exports = router;
