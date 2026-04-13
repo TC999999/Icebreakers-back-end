@@ -1,5 +1,9 @@
 const db = require("../db");
-const { ForbiddenError, NotFoundError } = require("../expressError");
+const {
+  ForbiddenError,
+  NotFoundError,
+  ConflictError,
+} = require("../expressError");
 
 // class of functions that handle CRUD operations for the group requests table and group invitations table
 // in the database
@@ -15,11 +19,11 @@ class GroupRequests {
         group_conversation_invitations
       WHERE
         group_conversation_id=$1 AND invited_user=$2`,
-      [id, username]
+      [id, username],
     );
     if (returnError && res.rows[0]) {
       throw new ForbiddenError(
-        `${username} has already received an invitation to join this group!`
+        `${username} has already received an invitation to join this group!`,
       );
     }
 
@@ -40,12 +44,12 @@ class GroupRequests {
         id=$1 
       AND 
         ${sender ? "inviter_user" : "invited_user"}=$2 `,
-      [id, username]
+      [id, username],
     );
 
     if (!res.rows[0]) {
       throw new ForbiddenError(
-        `You are not the ${sender ? "sender" : "recipient"} of this invitation!`
+        `You are not the ${sender ? "sender" : "recipient"} of this invitation!`,
       );
     }
   }
@@ -62,12 +66,12 @@ class GroupRequests {
       group_conversation_requests 
     WHERE 
       group_conversation_id=$1 AND requester_user=$2`,
-      [id, username]
+      [id, username],
     );
 
     if (returnError && res.rows[0]) {
-      throw new ForbiddenError(
-        `${username} has already sent a request to join this group!`
+      throw new ConflictError(
+        `${username} has already sent a request to join this group!`,
       );
     } else {
       return res.rows.length > 0;
@@ -85,7 +89,7 @@ class GroupRequests {
         group_conversation_requests
       WHERE
        id=$1 AND requester_user=$2`,
-      [id, username]
+      [id, username],
     );
 
     if (!res.rows[0]) {
@@ -114,12 +118,12 @@ class GroupRequests {
         gc.id=$2 
       AND 
         gc.host_user=$3`,
-      [id, groupID, username]
+      [id, groupID, username],
     );
 
     if (!res.rows[0]) {
       throw new ForbiddenError(
-        "You are not the host of the group this request was made for!"
+        "You are not the host of the group this request was made for!",
       );
     }
   }
@@ -138,7 +142,7 @@ class GroupRequests {
         ($1, $2, $3)
       RETURNING
         id`,
-      [from, content, group]
+      [from, content, group],
     );
 
     const res = await db.query(
@@ -158,7 +162,7 @@ class GroupRequests {
         gc.id=r.group_conversation_id
       WHERE
         r.id=$1`,
-      [r.rows[0].id]
+      [r.rows[0].id],
     );
 
     return res.rows[0];
@@ -176,7 +180,7 @@ class GroupRequests {
         WHERE 
           id=$2
             `,
-      [remove, id]
+      [remove, id],
     );
 
     const res = await db.query(
@@ -197,7 +201,7 @@ class GroupRequests {
       WHERE 
         r.id=$1
             `,
-      [id]
+      [id],
     );
 
     return res.rows[0];
@@ -219,7 +223,7 @@ class GroupRequests {
             requester_user=$2
         AND
             group_conversation_id=$3`,
-      [id, from, groupID]
+      [id, from, groupID],
     );
 
     if (!requestCheck.rows[0]) {
@@ -232,7 +236,7 @@ class GroupRequests {
           group_conversation_requests 
         WHERE 
           id=$1`,
-      [id]
+      [id],
     );
   }
 
@@ -251,7 +255,7 @@ class GroupRequests {
         ($1, $2, $3, $4)
       RETURNING
         id`,
-      [from, to, content, group]
+      [from, to, content, group],
     );
 
     const res = await db.query(
@@ -271,7 +275,7 @@ class GroupRequests {
         i.group_conversation_id=gc.id
       WHERE
         i.id=$1`,
-      [i.rows[0].id]
+      [i.rows[0].id],
     );
 
     return res.rows[0];
@@ -289,7 +293,7 @@ class GroupRequests {
         WHERE 
           id=$2
             `,
-      [remove, id]
+      [remove, id],
     );
 
     const res = await db.query(
@@ -310,7 +314,7 @@ class GroupRequests {
       WHERE 
         i.id=$1
             `,
-      [id]
+      [id],
     );
 
     return res.rows[0];
@@ -335,7 +339,7 @@ class GroupRequests {
             inviter_user=$3
         AND
             group_conversation_id=$4`,
-      [id, to, from, groupID]
+      [id, to, from, groupID],
     );
 
     if (!userCheck.rows[0]) {
@@ -347,7 +351,7 @@ class GroupRequests {
         group_conversation_invitations 
       WHERE 
         id=$1`,
-      [id]
+      [id],
     );
   }
 
@@ -362,7 +366,7 @@ class GroupRequests {
         group_conversation_invitations 
       WHERE 
         id=$1`,
-      [id]
+      [id],
     );
 
     return res.rows[0];

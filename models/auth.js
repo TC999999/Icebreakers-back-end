@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-const { UnauthorizedError, ForbiddenError } = require("../expressError");
+const { UnauthorizedError, ConflictError } = require("../expressError");
 const { BCRYPT_WORK_FACTOR } = require("../config");
 const db = require("../db");
 
@@ -23,11 +23,11 @@ class Authorization {
         users 
       WHERE
         username=$1`,
-      [username]
+      [username],
     );
 
     if (userCheck.rows[0]) {
-      throw new ForbiddenError("Username already taken!");
+      throw new ConflictError("Username already taken!");
     }
 
     const emailCheck = await db.query(
@@ -37,11 +37,11 @@ class Authorization {
         users 
       WHERE
         email_address=$1`,
-      [emailAddress]
+      [emailAddress],
     );
 
     if (emailCheck.rows[0]) {
-      throw new ForbiddenError("Email Address already taken!");
+      throw new ConflictError("Email Address already taken!");
     }
 
     let hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
@@ -59,7 +59,7 @@ class Authorization {
         favorite_color AS "favoriteColor", 
         is_admin AS "isAdmin", 
         is_flagged AS "isFlagged"`,
-      [username, hashedPassword, emailAddress, biography, favoriteColor]
+      [username, hashedPassword, emailAddress, biography, favoriteColor],
     );
 
     return res.rows[0];
@@ -79,7 +79,7 @@ class Authorization {
             users 
         WHERE 
             username=$1`,
-      [username]
+      [username],
     );
 
     const user = res.rows[0];
