@@ -1,7 +1,6 @@
 const db = require("../db");
 const { constructSearchString } = require("../helpers/constructSearchString");
-const { NotFoundError, ForbiddenError } = require("../expressError");
-const DirectRequests = require("./directRequests");
+const { NotFoundError, ConflictError } = require("../expressError");
 const { insertMultipleSQL } = require("../helpers/insertMultipleSQL");
 
 // class of functions for CRUD operations to the users table in the database
@@ -16,7 +15,7 @@ class User {
             users
         WHERE
             username=$1`,
-      [username]
+      [username],
     );
 
     let user = res.rows[0];
@@ -40,7 +39,7 @@ class User {
             users
         WHERE
             username=$1`,
-      [username]
+      [username],
     );
 
     let user = res.rows[0];
@@ -62,12 +61,47 @@ class User {
         users 
       WHERE
         users.username!=$1`,
-      [username]
+      [username],
     );
 
     return users.rows.map((user) => {
       return user.username;
     });
+  }
+
+  // retreives all rows from the users table except the row with the matching inputted username and returns
+  // it as an array of username strings
+  static async getUserSuggestions(username, input) {
+    if (!input) return [];
+    const newInput = input + "%";
+
+    const res = await db.query(
+      `
+      WITH
+        user_data AS
+        (SELECT
+          username
+        FROM
+          users
+        WHERE
+          username
+        ILIKE $1
+        AND
+          username!=$2
+        ORDER BY
+          username
+        LIMIT
+          10)
+      SELECT
+        JSON_AGG(user_data.username)
+      AS
+        users
+      FROM
+        user_data`,
+      [newInput, username],
+    );
+
+    return res.rows[0].users || [];
   }
 
   // returns on all interests in the users to interests table where the username column value matches the
@@ -90,7 +124,7 @@ class User {
         iu.topic_id=i.id 
       WHERE 
         u.username=$1`,
-        [username]
+        [username],
       );
 
       return res.rows[0].interests;
@@ -127,7 +161,7 @@ class User {
       ORDER BY
         JSON_ARRAY_LENGTH(JSON_AGG(interests.topic))
       DESC`,
-      [currentUsername, ...values]
+      [currentUsername, ...values],
     );
 
     return users.rows;
@@ -156,7 +190,7 @@ class User {
         u.username=$1 
       GROUP BY 
         u.username`,
-      [username]
+      [username],
     );
 
     return res.rows[0];
@@ -182,11 +216,11 @@ class User {
         email_address=$1
       AND
         username!=$2`,
-      [emailAddress, username]
+      [emailAddress, username],
     );
 
     if (emailCheck.rows[0]) {
-      throw new ForbiddenError("Email Address already taken!");
+      throw new ConflictError("Email Address already taken!");
     }
 
     let updateRes = await db.query(
@@ -201,7 +235,7 @@ class User {
         username=$4
       RETURNING
         favorite_color AS "newFavoriteColor"`,
-      [emailAddress, biography, favoriteColor, username]
+      [emailAddress, biography, favoriteColor, username],
     );
 
     await db.query(
@@ -210,14 +244,14 @@ class User {
         interests_to_users
       WHERE
         username=$1`,
-      [username]
+      [username],
     );
 
     await db.query(
       `INSERT INTO interests_to_users (topic_id, username) VALUES ${insertMultipleSQL(
         username,
-        interests
-      )}`
+        interests,
+      )}`,
     );
 
     return updateRes.rows[0];

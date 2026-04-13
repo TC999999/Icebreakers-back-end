@@ -5,6 +5,7 @@ const {
   getAllUsers,
   searchForUsers,
   getUserForEdit,
+  getUserSuggestions,
   editUser,
 } = require("../controllers/users");
 const { ensureCorrectUser, ensureLoggedIn } = require("../middleware/auth");
@@ -25,6 +26,9 @@ router.get("/check/:username", ensureLoggedIn, userCheck);
 
 // route for getting a list of all users based on inputted search params
 router.get("/search/get", ensureLoggedIn, getAllUsers);
+
+// route for getting a list of suggestions based on inputted search params
+router.get("/search/suggestions", ensureLoggedIn, getUserSuggestions);
 
 // route for getting a list of all usernames from users table
 router.all("/search/all", ensureLoggedIn, searchForUsers);

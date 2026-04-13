@@ -14,7 +14,7 @@ const userCheck = async (req, res, next) => {
     if (user && currentUser !== username) {
       conversationExists = await DirectRequests.checkConversationExists(
         currentUser,
-        username
+        username,
       );
       if (conversationExists)
         throw new ForbiddenError("Conversation already exists");
@@ -45,20 +45,20 @@ const getUserProfile = async (req, res, next) => {
         username,
         currentUser,
         false,
-        true
+        true,
       );
       conversationExists = await DirectRequests.checkConversationExists(
         currentUser,
-        username
+        username,
       );
 
       blockedOtherUser = await BlockedUsersToUsers.checkBlockedOtherUser(
         currentUser,
-        username
+        username,
       );
       blockedByOtherUser = await BlockedUsersToUsers.checkBlockedByOtherUser(
         currentUser,
-        username
+        username,
       );
     }
     const user = {
@@ -85,6 +85,21 @@ const getAllUsers = async (req, res, next) => {
   }
 };
 
+// returns a list of all usernames based on the input in the request query except for the current user saved in express session
+const getUserSuggestions = async (req, res, next) => {
+  try {
+    const { input } = req.query;
+
+    const users = await User.getUserSuggestions(
+      req.session.user.username,
+      input,
+    );
+    return res.status(200).send({ users });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 // returns a filtered list of users based on the search query parameters in the request; if the
 // findSimilarInterests parameter is in the body, also retrieves a list of the current user's interests
 // and filters out users with no similar interests to their own
@@ -93,12 +108,12 @@ const searchForUsers = async (req, res, next) => {
     const { username, findSimilarInterests } = req.query;
     const interests = await User.getSingleUserInterests(
       req.session.user.username,
-      findSimilarInterests
+      findSimilarInterests,
     );
     const users = await User.searchForUsers(
       req.session.user.username,
       username,
-      interests
+      interests,
     );
     return res.status(200).send({ users });
   } catch (err) {
@@ -142,6 +157,7 @@ module.exports = {
   userCheck,
   getUserProfile,
   getAllUsers,
+  getUserSuggestions,
   searchForUsers,
   getUserForEdit,
   editUser,
