@@ -132,7 +132,6 @@ class DirectRequests {
         VALUES ($1, $2, $3)
         RETURNING
             id,
-            requested_user AS "to",
             requester_user AS "from",
             content,
             created_at AS "createdAt"`,

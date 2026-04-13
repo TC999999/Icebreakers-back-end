@@ -148,7 +148,6 @@ class GroupRequests {
     const res = await db.query(
       `SELECT
         r.id,
-        gc.host_user AS "to",
         r.requester_user AS "from",
         r.content,
         gc.title AS "groupTitle",
