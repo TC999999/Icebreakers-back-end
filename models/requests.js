@@ -21,10 +21,6 @@ class AllRequests {
       ]);
 
       nextPage = nextRes.rows.length > 0;
-
-      requests = requests.map((r) => {
-        return { ...r, hasResponded: false, hasAccepted: false };
-      });
     }
 
     return { requestList: requests, next: nextPage || false };
