@@ -15,10 +15,12 @@ const addRequestSocket = (requestType, to, request, username) => {
       io.to(recipientUID).emit("notify", {
         from: "Icebreakers",
         message: constructToastMessage(username, request, requestType, "add"),
-        pathname: "/request",
+        pathname: "",
       });
-      recipientSocket.request.session.user.unansweredRequests += 1;
-      recipientSocket.request.session.save();
+      recipientSocket.request.session.reload(() => {
+        recipientSocket.request.session.user.unansweredRequests += 1;
+        recipientSocket.request.session.save();
+      });
     }
   }
 };
@@ -50,12 +52,12 @@ const removeRequestSocket = (requestType, to, request, username) => {
 };
 
 const requestResponseSocket = (response, to, requestType, username) => {
+  const io = getIO();
   if (users.has(to)) {
-    let recipientUID = users.get(to).id;
+    const recipientUID = users.get(to).id;
+
     if (recipientUID) {
-      io.to(recipientUID).emit("removeRequest", {
-        requestType,
-      });
+      io.to(recipientUID).emit("removeRequest", { response, requestType });
 
       const responseKey = response.accepted ? "accepted" : "declined";
 

@@ -1,5 +1,8 @@
 const db = require("../db");
-const constructRequestString = require("../helpers/constructRequestString");
+const {
+  constructRequestString,
+  constructNextRequestString,
+} = require("../helpers/constructRequestString");
 const returnCountString = require("../helpers/returnCountString");
 
 // class of functions that handle retrieval of any request or invitation in the database
@@ -9,7 +12,22 @@ class AllRequests {
   static async getAllRequests(username, params) {
     const res = await db.query(constructRequestString(params), [username]);
 
-    return res.rows;
+    let requests = res.rows;
+    let nextPage;
+
+    if (requests.length > 0) {
+      const nextRes = await db.query(constructNextRequestString(params), [
+        username,
+      ]);
+
+      nextPage = nextRes.rows.length > 0;
+
+      requests = requests.map((r) => {
+        return { ...r, hasResponded: false, hasAccepted: false };
+      });
+    }
+
+    return { requestList: requests, next: nextPage || false };
   }
 
   // returns a total count of all rows from all requests/invitations tables
@@ -18,14 +36,11 @@ class AllRequests {
       `SELECT 
             ${returnCountString("receivedDirectRequestCount")}, 
             ${returnCountString("sentDirectRequestCount")}, 
-            ${returnCountString("removedDirectRequestCount")},
             ${returnCountString("receivedGroupInvitationCount")},
             ${returnCountString("sentGroupInvitationCount")},
-            ${returnCountString("removedGroupInvitationCount")},
             ${returnCountString("receivedGroupRequestCount")},
-            ${returnCountString("sentGroupRequestCount")}, 
-            ${returnCountString("removedGroupRequestCount")}`,
-      [username]
+            ${returnCountString("sentGroupRequestCount")}`,
+      [username],
     );
 
     return Object.keys(res.rows[0]).reduce((acc, c) => {
@@ -48,7 +63,7 @@ class AllRequests {
             + 
                 ${returnCountString("receivedGroupRequestCount", false)}
             ) AS "unansweredRequests"`,
-      [username]
+      [username],
     );
 
     let unansweredRequests = parseFloat(res.rows[0].unansweredRequests);

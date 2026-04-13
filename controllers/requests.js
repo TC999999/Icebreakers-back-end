@@ -19,10 +19,12 @@ const getAllRequests = async (req, res, next) => {
   try {
     const { username } = req.params;
     const params = req.query;
+    const { requestList, next } = await AllRequests.getAllRequests(
+      username,
+      params,
+    );
 
-    const requests = await AllRequests.getAllRequests(username, params);
-
-    return res.status(200).send({ requests });
+    return res.status(200).send({ requestList, next });
   } catch (err) {
     return next(err);
   }

@@ -35,31 +35,15 @@ const removeRequest = async (req, res, next) => {
   try {
     const { id, username } = req.params;
     await DirectRequests.checkUserToDirectRequest(id, username, true);
-    const { remove } = req.body;
 
-    let to;
+    const request = await DirectRequests.removeRequest(id);
 
-    if (!remove) {
-      const { requesterUser, requestedUser } =
-        await DirectRequests.getRequestUsers(id);
-      await BlockedUsersToUsers.checkBlockedStatus(
-        requesterUser,
-        requestedUser,
-      );
-      to = requestedUser;
-    }
-
-    const request = await DirectRequests.removeRequest(remove, id);
-
-    if (!remove)
-      addRequestSocket("direct-requests-received", to, request, username);
-    else
-      removeRequestSocket(
-        "direct-requests-received",
-        request.to,
-        request,
-        username,
-      );
+    removeRequestSocket(
+      "direct-requests-received",
+      request.to,
+      request,
+      username,
+    );
 
     return res.status(200).send({ request });
   } catch (err) {
@@ -101,6 +85,11 @@ const respondToRequest = async (req, res, next) => {
       "direct-requests-sent",
       username,
     );
+
+    req.session.reload(() => {
+      req.session.user.unansweredRequests += -1;
+      req.session.save();
+    });
 
     if (accepted) {
       const conversation = await DirectConversations.createNewConversation(

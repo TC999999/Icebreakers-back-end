@@ -1,8 +1,8 @@
 const db = require("../db");
 const {
   NotFoundError,
-  UnacceptableError,
   ForbiddenError,
+  ConflictError,
 } = require("../expressError");
 
 class DirectRequests {
@@ -14,7 +14,7 @@ class DirectRequests {
     username1,
     username2,
     returnError = false,
-    forProfile = false
+    forProfile = false,
   ) {
     if (username1 !== username2) {
       const res = await db.query(
@@ -31,19 +31,19 @@ class DirectRequests {
             requested_user=$2 
         AND
             requester_user=$1`,
-        [username1, username2]
+        [username1, username2],
       );
 
       if (returnError && res.rows[0]) {
-        throw new ForbiddenError(
-          "Request already exists! Please check your inbox!"
+        throw new ConflictError(
+          "Request already exists! Please check your inbox!",
         );
       }
 
       return res.rows[0] !== undefined;
     }
     if (!forProfile) {
-      throw new ForbiddenError("Cannot make a conversation with yourself");
+      throw new ConflictError("Cannot make a conversation with yourself");
     }
   }
 
@@ -58,7 +58,7 @@ class DirectRequests {
         direct_conversation_requests 
       WHERE 
         id=$1`,
-      [id]
+      [id],
     );
 
     return res.rows[0];
@@ -78,12 +78,12 @@ class DirectRequests {
             id=$1
         AND
             ${sender ? "requester_user" : "requested_user"}=$2`,
-      [id, username]
+      [id, username],
     );
 
     if (!res.rows[0]) {
       throw new ForbiddenError(
-        `You are not the ${sender ? "sender" : "recipient"} of this request`
+        `You are not the ${sender ? "sender" : "recipient"} of this request`,
       );
     }
   }
@@ -95,7 +95,7 @@ class DirectRequests {
   static async checkConversationExists(
     username1,
     username2,
-    returnError = false
+    returnError = false,
   ) {
     const res = await db.query(
       `SELECT 
@@ -110,12 +110,12 @@ class DirectRequests {
         direct_conversation_id 
       HAVING 
       COUNT(*)>=2`,
-      [username1, username2]
+      [username1, username2],
     );
 
     if (returnError && res.rows[0]) {
-      throw new ForbiddenError(
-        "Conversation already exist between these two users!"
+      throw new ConflictError(
+        "Conversation already exist between these two users!",
       );
     }
 
@@ -136,7 +136,7 @@ class DirectRequests {
             requester_user AS "from",
             content,
             created_at AS "createdAt"`,
-      [to, from, content]
+      [to, from, content],
     );
 
     return res.rows[0];
@@ -154,7 +154,7 @@ class DirectRequests {
             requested_user=$1
         AND
             is_removed=false`,
-      [username]
+      [username],
     );
 
     return res.rows[0];
@@ -162,21 +162,21 @@ class DirectRequests {
 
   // updates and returns a single row in the direct requests table; updates column that allows the recipient
   // to be able to see request
-  static async removeRequest(remove, id) {
+  static async removeRequest(id) {
     const res = await db.query(
       `UPDATE 
             direct_conversation_requests 
         SET 
-            is_removed=$1 
+            is_removed=true 
         WHERE 
-            id=$2 
+            id=$1 
         RETURNING 
             id,
             requester_user AS "from",
             requested_user AS "to",
             content,
             created_at AS "createdAt"`,
-      [remove, id]
+      [id],
     );
 
     return res.rows[0];
@@ -198,7 +198,7 @@ class DirectRequests {
             requested_user=$2
         AND
             requester_user=$3`,
-      [id, to, from]
+      [id, to, from],
     );
 
     if (!requestCheck.rows[0]) {
@@ -212,7 +212,7 @@ class DirectRequests {
             id=$1 
           AND 
             requester_user=$2`,
-      [id, from]
+      [id, from],
     );
   }
 }

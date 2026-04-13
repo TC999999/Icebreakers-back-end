@@ -62,6 +62,12 @@ const getGroupSelectors = (requestOrInvitation, type) => {
   return selectors + otherUser;
 };
 
+const getGroupSelectorsNext = (requestOrInvitation, type) => {
+  const as = requestOrInvitation === "invitations" ? "i" : "r";
+  const selectors = `${as}.id`;
+  return selectors;
+};
+
 // constructs the column selector portion of a sql select query string for either direct requests,
 // group invitations or group requests
 const getSelectors = (params) => {
@@ -77,6 +83,15 @@ const getSelectors = (params) => {
         'gc.title AS "groupTitle", gc.id AS "groupID", ' +
         getGroupSelectors(params.requestOrInvitation, params.type)
       );
+  }
+};
+
+const getSelectorsNext = (params) => {
+  switch (params.directOrGroup) {
+    case "direct":
+      return "id";
+    case "group":
+      return getGroupSelectorsNext(params.requestOrInvitation, params.type);
   }
 };
 
@@ -124,38 +139,49 @@ const getGroupUsernameParams = (requestOrInvitation, type) => {
 };
 
 // constructs the correct "WHERE" statement for an SQL query string
-const getParams = (params) => {
+const getParams = (params, next = false) => {
   let usernameParam;
+  let dateParam;
   let isRemoved = "is_removed";
 
   switch (params.directOrGroup) {
     case "direct":
       usernameParam = directUsernameParams.get(params.type);
+      dateParam = "created_at";
       break;
 
     case "group":
       usernameParam = getGroupUsernameParams(
         params.requestOrInvitation,
-        params.type
+        params.type,
       );
-      isRemoved =
-        (params.requestOrInvitation === "invitations" ? "i." : "r.") +
-        isRemoved;
+
+      const as = params.requestOrInvitation === "invitations" ? "i." : "r.";
+      dateParam = as + "created_at";
+      isRemoved = as + isRemoved;
+
       break;
   }
 
-  return `WHERE ${usernameParam} AND ${isRemoved}=${params.type === "removed"}`;
+  return `WHERE ${usernameParam} AND ${isRemoved}=${params.type === "removed"} ORDER BY ${dateParam} DESC LIMIT 3 OFFSET ${next ? +params.pageParam + 3 : +params.pageParam}`;
 };
 
 // constructs full select query string for retrieving a list of requests from the correct table
 // while filtering out unneeded requests
-const constructSearchString = (params) => {
+const constructRequestString = (params) => {
   const selectors = getSelectors(params);
   const table = getTableName(params);
-
   const inlineParams = getParams(params);
 
   return `SELECT ${selectors} FROM ${table} ${inlineParams}`;
 };
 
-module.exports = constructSearchString;
+const constructNextRequestString = (params) => {
+  const selectors = getSelectorsNext(params);
+  const table = getTableName(params);
+  const inlineParams = getParams(params, true);
+
+  return `SELECT ${selectors} FROM ${table} ${inlineParams}`;
+};
+
+module.exports = { constructRequestString, constructNextRequestString };
