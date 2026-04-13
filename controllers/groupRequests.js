@@ -1,6 +1,10 @@
 const BlockedUsersToUsers = require("../models/blockedUsersToUsers");
 const GroupConversations = require("../models/groupConversations");
 const GroupRequests = require("../models/groupRequests");
+const {
+  addRequestSocket,
+  requestResponseSocket,
+} = require("../helpers/socketFunctions/requests");
 
 // if recipient user has not already received an invitation, sent a request, or is already a member of
 // this group, creates new invitation using data from client side, adds it to the database, and returns it
@@ -20,8 +24,10 @@ const createInvitation = async (req, res, next) => {
       username,
       to,
       content,
-      id
+      id,
     );
+
+    addRequestSocket("group-invites-received", to, invitation, username);
     return res.status(201).send({ invitation });
   } catch (err) {
     return next(err);
@@ -75,6 +81,18 @@ const respondToInvitation = async (req, res, next) => {
     let message = "Invitation was declined";
     let user;
 
+    requestResponseSocket(
+      { id, from, accepted },
+      from,
+      "group-invitations-sent",
+      username,
+    );
+
+    req.session.reload(() => {
+      req.session.user.unansweredRequests -= 1;
+      req.session.save();
+    });
+
     if (accepted) {
       user = await GroupConversations.addNewUser(username, groupID);
       message = "Invitation was accepted";
@@ -103,6 +121,7 @@ const createGroupRequest = async (req, res, next) => {
     await GroupRequests.checkInvitation(id, username, true);
 
     const request = await GroupRequests.createRequest(username, content, id);
+    addRequestSocket("group-requests-received", host, request, username);
 
     return res.status(201).send({ request });
   } catch (err) {
@@ -158,6 +177,18 @@ const respondToGroupRequest = async (req, res, next) => {
     }
     await GroupRequests.checkHostToGroupRequest(id, groupID, username);
     await GroupRequests.deleteRequest(id, from, groupID);
+
+    requestResponseSocket(
+      { id, from, accepted },
+      from,
+      "group-requests-sent",
+      username,
+    );
+
+    req.session.reload(() => {
+      req.session.user.unansweredRequests -= 1;
+      req.session.save();
+    });
 
     if (accepted) {
       let user = await GroupConversations.addNewUser(from, groupID);
