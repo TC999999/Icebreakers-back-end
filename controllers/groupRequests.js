@@ -73,18 +73,19 @@ const deleteGroupInvitation = async (req, res, next) => {
 const respondToInvitation = async (req, res, next) => {
   try {
     const { id, username } = req.params;
-    const { from, groupID, accepted } = req.body;
-    await GroupRequests.checkUserToGroupInvitation(id, username);
-    if (accepted) await BlockedUsersToUsers.checkBlockedStatus(username, from);
+    const { from, groupID, groupTitle, accepted } = req.body;
 
+    if (accepted) {
+      await BlockedUsersToUsers.checkBlockedStatus(username, from);
+    }
+
+    await GroupRequests.checkUserToGroupInvitation(id, username);
     await GroupRequests.deleteInvitation(id, username, from, groupID);
-    let message = "Invitation was declined";
-    let user;
 
     requestResponseSocket(
-      { id, from, accepted },
+      { id, from, groupTitle, accepted },
       from,
-      "group-invitations-sent",
+      "group-invites-sent",
       username,
     );
 
@@ -94,11 +95,17 @@ const respondToInvitation = async (req, res, next) => {
     });
 
     if (accepted) {
-      user = await GroupConversations.addNewUser(username, groupID);
-      message = "Invitation was accepted";
+      const user = await GroupConversations.addNewUser(username, groupID);
+      return res.status({
+        message: "Invitation was accepted",
+        user,
+        invitationID: id,
+      });
     }
 
-    res.status(201).send({ message, user, invitationID: id });
+    return res
+      .status(201)
+      .send({ message: "invitation was declined", invitationID: id });
   } catch (err) {
     return next(err);
   }
@@ -173,7 +180,7 @@ const respondToGroupRequest = async (req, res, next) => {
 
     if (accepted) {
       const { host } = await GroupConversations.getSimpleGroupInfo(groupID);
-      await BlockedUsersToUsers.checkBlockedStatus(username, host);
+      await BlockedUsersToUsers.checkBlockedStatus(from, host);
     }
     await GroupRequests.checkHostToGroupRequest(id, groupID, username);
     await GroupRequests.deleteRequest(id, from, groupID);
@@ -193,9 +200,9 @@ const respondToGroupRequest = async (req, res, next) => {
     if (accepted) {
       let user = await GroupConversations.addNewUser(from, groupID);
 
-      return res.status(200).send({ user, message: "invitation accepted" });
+      return res.status(200).send({ user, message: "Request accepted" });
     }
-    return res.status(200).send({ message: "invitation declined" });
+    return res.status(200).send({ message: "Request declined" });
   } catch (err) {
     return next(err);
   }
