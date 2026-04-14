@@ -22,7 +22,7 @@ class GroupRequests {
       [id, username],
     );
     if (returnError && res.rows[0]) {
-      throw new ForbiddenError(
+      throw new ConflictError(
         `${username} has already received an invitation to join this group!`,
       );
     }
