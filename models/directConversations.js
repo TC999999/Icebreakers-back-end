@@ -19,7 +19,7 @@ class DirectConversations {
        RETURNING
           id,
           title,
-          last_updated_at AS "lastUpdatedAt"`
+          last_updated_at AS "lastUpdatedAt"`,
     );
 
     const conversation = res.rows[0];
@@ -31,7 +31,7 @@ class DirectConversations {
      VALUES
         ($2,$1),
         ($3,$1)`,
-      [conversation.id, user_1, user_2]
+      [conversation.id, user_1, user_2],
     );
 
     return conversation;
@@ -42,7 +42,7 @@ class DirectConversations {
   static async conversationExists(id) {
     const res = await db.query(
       `SELECT id FROM direct_conversations WHERE id=$1`,
-      [id]
+      [id],
     );
 
     if (!res.rows[0]) {
@@ -72,7 +72,7 @@ class DirectConversations {
         udc.direct_conversation_id=udc2.direct_conversation_id 
       WHERE 
         udc.username=$2`,
-      [username1, username2]
+      [username1, username2],
     );
 
     return res.rows[0];
@@ -92,7 +92,7 @@ class DirectConversations {
       AND
         username=$2
       `,
-      [id, username]
+      [id, username],
     );
 
     if (!res.rows[0]) {
@@ -114,7 +114,7 @@ class DirectConversations {
             content,
             username,
             created_at AS "createdAt"`,
-      [content, username, id]
+      [content, username, id],
     );
 
     const message = messageRes.rows[0];
@@ -126,7 +126,7 @@ class DirectConversations {
         last_updated_at=$1 
       WHERE 
         id=$2`,
-      [message.createdAt, id]
+      [message.createdAt, id],
     );
 
     return { message };
@@ -193,7 +193,7 @@ class DirectConversations {
         ORDER BY
           dc.last_updated_at
         DESC`,
-      [username]
+      [username],
     );
     return res.rows;
   }
@@ -209,7 +209,7 @@ class DirectConversations {
         direct_conversation_id=$1 
       AND 
         username=$2`,
-      [id, username]
+      [id, username],
     );
 
     return res.rows[0];
@@ -229,7 +229,7 @@ class DirectConversations {
         username=$2
       RETURNING
         unread_messages AS "unreadMessages"`,
-      [id, username]
+      [id, username],
     );
 
     return res.rows[0];
@@ -248,7 +248,7 @@ class DirectConversations {
         username=$2
       RETURNING
         unread_messages AS "unreadMessages"`,
-      [id, username]
+      [id, username],
     );
 
     return res.rows[0];
@@ -266,7 +266,7 @@ class DirectConversations {
             direct_conversations_messages
         WHERE
             direct_conversation_id=$1`,
-      [id]
+      [id],
     );
 
     return res.rows;
@@ -281,7 +281,7 @@ class DirectConversations {
         direct_conversations.id AS "id",
         title 
       FROM 
-        users_to_direct_conversations 
+        users_to_direct_conversations
       JOIN
         direct_conversations
       ON
@@ -290,7 +290,7 @@ class DirectConversations {
         username!=$1 
       AND 
         direct_conversation_id=$2`,
-      [username, id]
+      [username, id],
     );
 
     return res.rows[0];
@@ -306,7 +306,7 @@ class DirectConversations {
         users_to_direct_conversations 
       WHERE 
         username=$1`,
-      [username]
+      [username],
     );
 
     return res.rows[0];
@@ -327,7 +327,7 @@ class DirectConversations {
         id,
         title,
         last_updated_at AS "lastUpdatedAt"`,
-      [title, id]
+      [title, id],
     );
 
     return res.rows[0];

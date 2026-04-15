@@ -1,14 +1,17 @@
 const BlockedUsersToUsers = require("../models/blockedUsersToUsers");
 const DirectConversations = require("../models/directConversations");
+const {
+  newConversationMessageSocket,
+} = require("../helpers/socketFunctions/conversations");
+const users = require("../socketStore");
 
 // retrieves a list of all direct conversations that belong to a single user and returns them to the
 // client-side
 const getAllConversations = async (req, res, next) => {
   try {
     const { username } = req.params;
-    const conversations = await DirectConversations.getAllConversations(
-      username
-    );
+    const conversations =
+      await DirectConversations.getAllConversations(username);
     return res.status(200).send({ conversations });
   } catch (err) {
     return next(err);
@@ -21,7 +24,7 @@ const getConversationID = async (req, res, next) => {
     const { username, otherUser } = req.params;
     const directConversation = await DirectConversations.getConversationID(
       username,
-      otherUser
+      otherUser,
     );
     return res.status(200).send(directConversation);
   } catch (err) {
@@ -42,9 +45,12 @@ const createNewMessage = async (req, res, next) => {
     const { message } = await DirectConversations.createNewMessage(
       content,
       username,
-      id
+      id,
     );
+
     await DirectConversations.updateUnreadMessages(id, otherUser);
+
+    newConversationMessageSocket(message, otherUser, id);
     return res.status(201).send({ message });
   } catch (err) {
     return next(err);
@@ -64,17 +70,21 @@ const getConversationMessages = async (req, res, next) => {
     const messages = await DirectConversations.getMessages(id);
     const conversationData = await DirectConversations.getOtherConversationUser(
       id,
-      username
+      username,
     );
     const { unreadMessages } = await DirectConversations.getUnreadMessages(
       id,
-      username
+      username,
     );
 
     if (unreadMessages > 0) {
       await DirectConversations.clearUnreadMessages(id, username);
     }
-    return res.status(200).send({ messages, conversationData, unreadMessages });
+
+    const isOnline = users.has(conversationData.recipient);
+    return res
+      .status(200)
+      .send({ ...conversationData, messages, isOnline, unreadMessages });
   } catch (err) {
     return next(err);
   }
@@ -90,13 +100,13 @@ const editConversation = async (req, res, next) => {
     await DirectConversations.userConversationCheck(id, username);
     const { recipient } = await DirectConversations.getOtherConversationUser(
       id,
-      username
+      username,
     );
     await BlockedUsersToUsers.checkBlockedStatus(username, recipient);
     const { title } = req.body;
     const updatedConversation = await DirectConversations.editConversation(
       id,
-      title
+      title,
     );
     return res.status(200).send({ updatedConversation });
   } catch (err) {
