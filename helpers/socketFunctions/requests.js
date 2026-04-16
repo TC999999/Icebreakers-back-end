@@ -1,6 +1,6 @@
 const { getIO } = require("../../socket");
 const users = require("../../socketStore");
-const constructToastMessage = require("../constructToastMessage");
+const { constructToastMessageRequest } = require("../constructToastMessage");
 
 const addRequestSocket = (requestType, to, request, username) => {
   const io = getIO();
@@ -14,7 +14,12 @@ const addRequestSocket = (requestType, to, request, username) => {
       });
       io.to(recipientUID).emit("notify", {
         from: "Icebreakers",
-        message: constructToastMessage(username, request, requestType, "add"),
+        message: constructToastMessageRequest(
+          username,
+          request,
+          requestType,
+          "add",
+        ),
         pathname: "",
       });
       recipientSocket.request.session.reload(() => {
@@ -37,7 +42,7 @@ const removeRequestSocket = (requestType, to, request, username) => {
       });
       io.to(recipientUID).emit("notify", {
         from: "Icebreakers",
-        message: constructToastMessage(
+        message: constructToastMessageRequest(
           username,
           request,
           requestType,
@@ -63,7 +68,7 @@ const requestResponseSocket = (response, to, requestType, username) => {
 
       io.to(recipientUID).emit("notify", {
         from: "Icebreakers",
-        message: constructToastMessage(
+        message: constructToastMessageRequest(
           username,
           response,
           requestType,

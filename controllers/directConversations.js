@@ -2,6 +2,7 @@ const BlockedUsersToUsers = require("../models/blockedUsersToUsers");
 const DirectConversations = require("../models/directConversations");
 const {
   newConversationMessageSocket,
+  editConversationSocket,
 } = require("../helpers/socketFunctions/conversations");
 const users = require("../socketStore");
 
@@ -107,6 +108,14 @@ const editConversation = async (req, res, next) => {
     const updatedConversation = await DirectConversations.editConversation(
       id,
       title,
+    );
+
+    editConversationSocket(
+      username,
+      title,
+      recipient,
+      id,
+      updatedConversation.lastUpdatedAt,
     );
     return res.status(200).send({ updatedConversation });
   } catch (err) {

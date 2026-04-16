@@ -1,7 +1,7 @@
 const messageTemplate = require("./requestTypeMap");
 
 // construct message to send to the client-side that will appear in toast notification message
-const constructToastMessage = (
+const constructToastMessageRequest = (
   username,
   content,
   requestType = "",
@@ -14,4 +14,13 @@ const constructToastMessage = (
   return returnString;
 };
 
-module.exports = constructToastMessage;
+const constructToastMessageEditConversation = (username, newTitle) => {
+  return newTitle
+    ? `${username} has updated your personal chatroom title to ${newTitle}.`
+    : `${username} has removed the title from your personal chat room.`;
+};
+
+module.exports = {
+  constructToastMessageRequest,
+  constructToastMessageEditConversation,
+};

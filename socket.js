@@ -113,30 +113,6 @@ const initializeSocket = (server) => {
       }
     });
 
-    // when user emits signal, increases recipients unread message count, sends message to be added to list
-    // of messages on client side, sends them a notification that they received a message, and increases
-    // recipient's unread message count in their express session
-    // socket.on("directMessage", ({ message, id, to }) => {
-    //   if (users.has(to)) {
-    //     let recipientUID = users.get(to).id;
-    //     let recipientSocket = users.get(to).socket;
-    //     if (recipientUID && recipientSocket) {
-    //       io.to(recipientUID).emit("increaseUnreadDirectMessages");
-    //       io.to(recipientUID).emit("directMessage", {
-    //         message,
-    //         id,
-    //       });
-    //       io.to(recipientUID).emit("notify", {
-    //         from: username,
-    //         message: message.content,
-    //         pathname: "/conversations",
-    //       });
-    //       recipientSocket.request.session.user.unreadDirectMessages += 1;
-    //       recipientSocket.request.session.save();
-    //     }
-    //   }
-    // });
-
     // decreases the current user's unread message count in express session and clears the total number of
     // unread messages in the database
     socket.on("decreaseUnreadDirectMessages", async ({ id }) => {
@@ -153,18 +129,6 @@ const initializeSocket = (server) => {
       await GroupConversations.clearUnreadMessages(id, username);
       session.user.unreadGroupMessages -= 1;
       session.save();
-    });
-
-    // when user emits signal, sends updated conversation data to recipient user
-    socket.on("editConversation", ({ conversation, to }) => {
-      if (users.has(to)) {
-        let recipientUID = users.get(to).id;
-        if (recipientUID) {
-          io.to(recipientUID).emit("editConversation", {
-            conversation,
-          });
-        }
-      }
     });
 
     // lets current user join group socket room

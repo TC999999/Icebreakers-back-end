@@ -1,5 +1,8 @@
 const { getIO } = require("../../socket");
 const users = require("../../socketStore");
+const {
+  constructToastMessageEditConversation,
+} = require("../constructToastMessage");
 
 const addConversationSocket = (conversation, to) => {
   const io = getIO();
@@ -13,6 +16,9 @@ const addConversationSocket = (conversation, to) => {
   }
 };
 
+// when user emits signal, increases recipients unread message count, sends message to be added to list
+// of messages on client side, sends them a notification that they received a message, and increases
+// recipient's unread message count in their express session
 const newConversationMessageSocket = (message, to, id) => {
   const io = getIO();
   if (users.has(to)) {
@@ -40,4 +46,28 @@ const newConversationMessageSocket = (message, to, id) => {
   }
 };
 
-module.exports = { addConversationSocket, newConversationMessageSocket };
+// when server emits signal, sends updated conversation data and toast notification message to recipient user
+const editConversationSocket = (username, newTitle, to, id, lastUpdatedAt) => {
+  const io = getIO();
+  if (users.has(to)) {
+    const recipientUID = users.get(to).id;
+    if (recipientUID) {
+      io.to(recipientUID).emit("editConversation", {
+        title: newTitle,
+        cID: id,
+        lastUpdatedAt,
+      });
+      io.to(recipientUID).emit("notify", {
+        from: "Icebreakers",
+        message: constructToastMessageEditConversation(username, newTitle),
+        pathname: "",
+      });
+    }
+  }
+};
+
+module.exports = {
+  addConversationSocket,
+  newConversationMessageSocket,
+  editConversationSocket,
+};
