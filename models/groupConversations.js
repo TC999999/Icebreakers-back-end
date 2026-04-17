@@ -17,7 +17,7 @@ class GroupConversations {
     username,
     inGroupProfile = false,
     isInGroup = false,
-    inGroupMessages = false
+    inGroupMessages = false,
   ) {
     const res = await db.query(
       `
@@ -29,7 +29,7 @@ class GroupConversations {
         group_conversation_id=$1 
       AND 
         username=$2`,
-      [id, username]
+      [id, username],
     );
     if (inGroupProfile) {
       return res.rows[0] !== undefined;
@@ -40,7 +40,7 @@ class GroupConversations {
       !inGroupMessages
     ) {
       throw new ForbiddenError(
-        `You cannot make an invitation for a group you are not a part of`
+        `You cannot make an invitation for a group you are not a part of`,
       );
     } else if (
       !inGroupProfile &&
@@ -68,7 +68,7 @@ class GroupConversations {
         group_conversations 
       WHERE 
         id=$1 AND host_user=$2`,
-      [group_conversation_id, username]
+      [group_conversation_id, username],
     );
 
     if (!res.rows[0]) {
@@ -84,7 +84,7 @@ class GroupConversations {
             (username,
             group_conversation_id)
         VALUES ($1, $2)`,
-      [username, group_conversation_id]
+      [username, group_conversation_id],
     );
 
     let res = await db.query(
@@ -96,7 +96,7 @@ class GroupConversations {
         users 
       WHERE 
         username=$1`,
-      [username]
+      [username],
     );
 
     return res.rows[0];
@@ -116,7 +116,7 @@ class GroupConversations {
             title,
             host_user AS "host",
             created_at AS "createdAt"`,
-      [title, host, description]
+      [title, host, description],
     );
 
     return res.rows[0];
@@ -124,14 +124,22 @@ class GroupConversations {
 
   // returns a list of titles and host usernames from all rows in the group conversations table; to be used
   // for dropdown search results
-  static async getAllGroupNames() {
+  static async getAllGroupNames(name) {
+    const input = name + "%";
     const res = await db.query(
       `
     SELECT
       gc.title,
       gc.host_user AS "host"
     FROM
-      group_conversations AS gc`
+      group_conversations AS gc
+    WHERE
+      gc.title ILIKE $1
+    ORDER BY
+      gc.title
+    LIMIT
+      10`,
+      [input],
     );
 
     return res.rows;
@@ -146,7 +154,7 @@ class GroupConversations {
       host,
       user,
       newGroups,
-      interests
+      interests,
     );
     const res = await db.query(
       `
@@ -193,7 +201,7 @@ class GroupConversations {
         group_data
         ${filterString}
        `,
-      values
+      values,
     );
 
     return res.rows;
@@ -212,7 +220,7 @@ class GroupConversations {
         username=$1 
       GROUP BY 
         ugc.username`,
-      [username]
+      [username],
     );
 
     return res.rows[0] ? res.rows[0].groups : [];
@@ -250,7 +258,7 @@ class GroupConversations {
           gc.id=ugc.group_conversation_id 
         WHERE 
           gc.host_user!=$1 AND ugc.username=$1) AS "nonHostedGroups"`,
-      [username]
+      [username],
     );
 
     return res.rows[0];
@@ -266,7 +274,7 @@ class GroupConversations {
         users_to_group_conversations AS ugc
       WHERE 
         ugc.username=$1`,
-      [username]
+      [username],
     );
 
     return res.rows[0];
@@ -289,7 +297,7 @@ class GroupConversations {
         gc.id=ugc.group_conversation_id 
       WHERE 
         ugc.username=$1;`,
-      [username]
+      [username],
     );
     return res.rows;
   }
@@ -309,7 +317,7 @@ class GroupConversations {
         gc.id=ugc.group_conversation_id 
       WHERE 
         username=$1;`,
-      [username]
+      [username],
     );
     return res.rows;
   }
@@ -325,7 +333,7 @@ class GroupConversations {
         group_conversations
       WHERE 
         id=$1`,
-      [id]
+      [id],
     );
 
     return res.rows[0];
@@ -373,7 +381,7 @@ class GroupConversations {
         group_conversations AS gc
       WHERE 
         gc.id=$1`,
-      [id]
+      [id],
     );
 
     return res.rows[0];
@@ -396,7 +404,7 @@ class GroupConversations {
         ugc.group_conversation_id=$1 
       AND 
         u.username!=$2`,
-      [id, username]
+      [id, username],
     );
 
     return res.rows.map((user) => {
@@ -418,7 +426,7 @@ class GroupConversations {
         group_conversations_messages
       WHERE
         group_conversation_id=$1`,
-      [id]
+      [id],
     );
 
     return res.rows;
@@ -438,7 +446,7 @@ class GroupConversations {
             content,
             username,
             created_at AS "createdAt"`,
-      [content, username, group_conversation_id]
+      [content, username, group_conversation_id],
     );
 
     return res.rows[0];
@@ -456,7 +464,7 @@ class GroupConversations {
         group_conversation_id=$1
       AND
         username=$2`,
-      [id, username]
+      [id, username],
     );
 
     return res.rows[0];
@@ -480,7 +488,7 @@ class GroupConversations {
         username,
         unread_messages AS "unreadMessages"
         `,
-      [id, username]
+      [id, username],
     );
 
     return res.rows;
@@ -501,7 +509,7 @@ class GroupConversations {
       RETURNING
         unread_messages AS "unreadMessages"
         `,
-      [id, username]
+      [id, username],
     );
 
     return res.rows[0];
@@ -518,7 +526,7 @@ class GroupConversations {
         username=$2
       RETURNING
         unread_messages AS "unreadGroupMessages"`,
-      [id, username]
+      [id, username],
     );
 
     return res.rows[0];

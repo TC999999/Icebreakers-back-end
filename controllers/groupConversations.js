@@ -13,14 +13,14 @@ const createNewConversation = async (req, res, next) => {
     const conversation = await GroupConversations.createNewConversation(
       title,
       username,
-      description
+      description,
     );
 
     await GroupConversations.addNewUser(username, conversation.id);
 
     const newInterests = await Interests.addInterestsForGroup(
       conversation.id,
-      interests
+      interests,
     );
 
     return res.status(201).send({ conversation, newInterests });
@@ -32,7 +32,8 @@ const createNewConversation = async (req, res, next) => {
 // returns a list of all group conversation names
 const getAllGroupNames = async (req, res, next) => {
   try {
-    const groups = await GroupConversations.getAllGroupNames();
+    const { name } = req.query;
+    const groups = await GroupConversations.getAllGroupNames(name);
     return res.status(200).send({ groups });
   } catch (err) {
     return next(err);
@@ -49,7 +50,7 @@ const searchGroups = async (req, res, next) => {
 
     const interests = await User.getSingleUserInterests(
       username,
-      similarInterests
+      similarInterests,
     );
 
     const groups = await GroupConversations.searchGroups(
@@ -58,7 +59,7 @@ const searchGroups = async (req, res, next) => {
       host,
       user,
       interests,
-      newGroups
+      newGroups,
     );
     return res.status(200).send({ groups });
   } catch (err) {
@@ -103,7 +104,7 @@ const getGroup = async (req, res, next) => {
       const requestPending = await GroupRequests.checkRequest(id, username);
       const invitationPending = await GroupRequests.checkInvitation(
         id,
-        username
+        username,
       );
       const group = await GroupConversations.getGroupInfo(id);
       return res
@@ -139,7 +140,7 @@ const getGroupMessageInformation = async (req, res, next) => {
     const users = await GroupConversations.getGroupUsers(id, username);
     const { unreadMessages } = await GroupConversations.getUnreadMessages(
       id,
-      username
+      username,
     );
 
     if (unreadMessages > 0) {
@@ -175,7 +176,7 @@ const createGroupMessage = async (req, res, next) => {
     const message = await GroupConversations.createNewMessage(
       content,
       username,
-      id
+      id,
     );
 
     const users = await GroupConversations.updateUnreadMessages(id, username);
@@ -208,7 +209,7 @@ const removeUserFromGroup = async (req, res, next) => {
 
     let removedUserData = await GroupConversations.removeUserFromGroup(
       id,
-      removedUser
+      removedUser,
     );
 
     return res.status(200).send({ removedUserData });
