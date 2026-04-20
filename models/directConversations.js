@@ -3,6 +3,7 @@ const {
   UnauthorizedError,
   NotFoundError,
   ForbiddenError,
+  BadRequestError,
 } = require("../expressError");
 
 // Direct Messages model: handles all postgresql queries that involve direct message conversations, including
@@ -103,6 +104,9 @@ class DirectConversations {
   // creates a new message in direct conversation messages table: adds the user who created the message and
   // the conversation it was made for
   static async createNewMessage(content, username, id) {
+    if (!content) {
+      throw new BadRequestError("Inputted message cannot be empty!");
+    }
     const messageRes = await db.query(
       `INSERT INTO direct_conversations_messages
             (content,
