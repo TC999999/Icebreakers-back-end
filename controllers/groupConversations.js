@@ -73,13 +73,10 @@ const getAllGroups = async (req, res, next) => {
   try {
     const { username } = req.params;
     const { getSingle } = req.query;
-    let groups;
 
-    if (getSingle) {
-      groups = await GroupConversations.getAllGroupsSingleList(username);
-    } else {
-      groups = await GroupConversations.getAllGroups(username);
-    }
+    const groups = getSingle
+      ? await GroupConversations.getAllGroupsSingleList(username)
+      : await GroupConversations.getAllGroups(username);
 
     return res.status(200).send({ groups });
   } catch (err) {
