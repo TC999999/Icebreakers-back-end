@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 // server port
-const PORT = +process.env.port || 3001;
+const PORT = +process.env.PORT || 3001;
 
 const BCRYPT_WORK_FACTOR = process.env.NODE_ENV === "test" ? 1 : 12;
 
